@@ -40,7 +40,7 @@ Langfristig soll das Projekt wachsen und auch monetarisierbare Funktionen tragen
 | `share.html` | Branded Zwischenseite. Liest den `?p=`-Parameter und leitet nach ~450 ms per `location.replace` auf `app.html` mit demselben Query-String weiter. |
 | `Ladevorschlag-Render.html` | Druck-/PDF-Vorlage (`@media print`, `window.print()`). Enthält den QR-Code zurück zum 3D-Plan und mehrere Haftungs-Hinweise. |
 | `impressum.html`, `datenschutz.html` | Rechtsseiten. Inhaltliche Änderungen nur mit Rücksprache. |
-| `og.png`, `shareog.png` | Social-Vorschaubilder (1200×630). |
+| `og.png`, `share-og.png` | Social-Vorschaubilder (1200×630). |
 
 ---
 
@@ -87,7 +87,7 @@ Plus „Custom". Diese Werte sind real und mit den Speditionstabellen abgegliche
 
 ## 6. Bekannte Punkte / Backlog
 
-- **OG-Image-Bug in `share.html`:** Die Datei referenziert das Vorschaubild als `share-og.png` (mit Bindestrich), die tatsächliche Datei heißt aber `shareog.png` (ohne Bindestrich). Dadurch lädt die Vorschau geteilter Links nicht. Fix: entweder die Referenzen in `share.html` auf `shareog.png` ändern **oder** die Datei in `share-og.png` umbenennen — einheitlich machen.
+- **OG-Image in `share.html`:** Vorschaubild und Referenz sind auf `share-og.png` (mit Bindestrich) vereinheitlicht; `share.html` (`og:image`/`twitter:image`) zeigt korrekt auf die tatsächlich im Repo vorhandene Datei `share-og.png`. (Frühere Doku nannte die Datei fälschlich `shareog.png` ohne Bindestrich — korrigiert.)
 - **Netlify-Auto-Deploy:** Soll künftig aus diesem Repo deployen (statt manuellem Upload). Ggf. eine `netlify.toml` und/oder `_redirects` ergänzen — aber erst nach Rücksprache, da sich dadurch ändert, *wie* die Live-Seite gebaut wird.
 
 ---

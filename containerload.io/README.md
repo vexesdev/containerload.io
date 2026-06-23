@@ -45,7 +45,7 @@ Kein npm, kein Bundler, kein Framework-Build. Eine HTML-Datei im Browser öffnen
 | `Ladevorschlag-Render.html` | Druck-/PDF-Vorlage für den Ladevorschlag inkl. QR-Code |
 | `impressum.html` | Impressum |
 | `datenschutz.html` | Datenschutzerklärung |
-| `og.png`, `shareog.png` | Social-Media-Vorschaubilder |
+| `og.png`, `share-og.png` | Social-Media-Vorschaubilder |
 
 ## Lokale Entwicklung
 
