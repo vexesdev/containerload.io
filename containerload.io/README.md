@@ -73,3 +73,5 @@ ContainerLoad ist als einfaches, nützliches Werkzeug einsatzbereit und wird im 
 ---
 
 *Geometrische Abschätzung · keine Achslast-Garantie · ersetzt keine fachliche Prüfung der Ladungssicherung.*
+
+<!-- Netlify Deploy Preview neu angestoßen (PR #2). -->
