@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ContainerLoad</title>
+<meta name="description" content="3D-Beladung, palettengenaue Berechnung und automatische Container-Empfehlung in Sekunden, direkt im Browser. Kostenlos, ohne Account." />
+<meta property="og:title" content="ContainerLoad — Beladung in Sekunden" />
+<meta property="og:description" content="Passt deine Ladung rein? In welchen Container? ContainerLoad rechnet es live in 3D." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://containerload.io/" />
+<meta property="og:site_name" content="ContainerLoad" />
+<meta property="og:image" content="https://containerload.io/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="ContainerLoad — Jede Ladung, im richtigen Container." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="ContainerLoad — Beladung in Sekunden" />
+<meta name="twitter:description" content="Passt deine Ladung rein? In welchen Container? ContainerLoad rechnet es live in 3D." />
+<meta name="twitter:image" content="https://containerload.io/og.png" />
+<meta name="theme-color" content="#070a0f" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 rx=%225%22 fill=%22%232f9bff%22/><rect x=%223%22 y=%227%22 width=%2218%22 height=%2211%22 rx=%221.5%22 fill=%22none%22 stroke=%22%2304101f%22 stroke-width=%222%22/><rect x=%225%22 y=%229.3%22 width=%222.3%22 height=%226.4%22 rx=%220.5%22 fill=%22%2304101f%22/><rect x=%227.9%22 y=%229.3%22 width=%222.3%22 height=%226.4%22 rx=%220.5%22 fill=%22%2304101f%22/><rect x=%2210.8%22 y=%229.3%22 width=%222.3%22 height=%226.4%22 rx=%220.5%22 fill=%22%2304101f%22/></svg>" />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{
+  --bg:#070a0f; --card:#0c111a; --card2:#0e1420; --line:#19222f; --line2:#26313f;
+  --text:#eef2f7; --dim:#9aa7b8; --faint:#67748a;
+  --accent:#2f9bff; --teal:#38e0c8; --good:#37d39f; --warn:#ffb454;
+  --grad:linear-gradient(90deg,#2f9bff,#38e0c8);
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+section[id],header[id]{scroll-margin-top:88px}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',ui-sans-serif,system-ui,sans-serif;overflow-x:hidden}
+.mono{font-family:var(--mono)}
+.grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.grad-bg{background:var(--grad)}
+/* grid backdrop */
+.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(120,150,200,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(120,150,200,.05) 1px,transparent 1px);
+  background-size:54px 54px;
+  -webkit-mask-image:radial-gradient(120% 90% at 50% 0%,#000 30%,transparent 80%);
+  mask-image:radial-gradient(120% 90% at 50% 0%,#000 30%,transparent 80%);}
+.glow{position:fixed;border-radius:50%;filter:blur(90px);z-index:0;pointer-events:none;opacity:.5}
+.card{background:rgba(12,17,26,.7);border:1px solid var(--line);border-radius:18px;backdrop-filter:blur(8px)}
+.glass{background:rgba(10,15,24,.72);border:1px solid #1e2a3a;backdrop-filter:blur(12px)}
+.btn{display:inline-flex;align-items:center;gap:.5rem;font-weight:700;border-radius:12px;transition:.18s;cursor:pointer;white-space:nowrap}
+.btn-primary{background:var(--grad);color:#04101f;box-shadow:0 8px 30px -8px rgba(47,155,255,.6)}
+.btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn-ghost{background:rgba(255,255,255,.03);border:1px solid var(--line2);color:var(--text)}
+.btn-ghost:hover{border-color:rgba(47,155,255,.6);background:rgba(47,155,255,.06)}
+.chip{font-family:var(--mono);font-size:11px;letter-spacing:.04em;border:1px solid var(--line2);border-radius:9px;padding:.4rem .6rem;color:var(--dim);background:rgba(255,255,255,.02);transition:.3s}
+.chip.on{border-color:rgba(47,155,255,.7);color:#bcd9ff;background:rgba(47,155,255,.1);box-shadow:0 0 22px -6px rgba(47,155,255,.6)}
+.chip.ok{border-color:rgba(55,211,159,.7);color:#9bf0cd;background:rgba(55,211,159,.1)}
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.cursor{display:inline-block;width:2px;height:1.05em;background:var(--accent);margin-left:2px;vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.floaty{animation:float 5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 10px var(--good);animation:pulse 1.6s infinite}
+.glass-nav{background:rgba(9,13,20,.62);border:1px solid rgba(120,150,200,.13);backdrop-filter:blur(14px);box-shadow:0 12px 44px -18px rgba(0,0,0,.75)}
+.glass-nav.scrolled{background:rgba(7,10,15,.86)}
+@keyframes navpop{0%{opacity:0;transform:translateY(-14px) scale(.93)}62%{opacity:1;transform:translateY(0) scale(1.022)}100%{opacity:1;transform:scale(1)}}
+@keyframes itempop{0%{opacity:0;transform:translateY(-7px) scale(.86)}70%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+.navpill{animation:navpop .68s cubic-bezier(.18,.7,.2,1) both}
+@keyframes clload{0%{transform:scaleY(0)}100%{transform:scaleY(1)}}
+@keyframes clload2{0%{transform:scaleY(0)}100%{transform:scaleY(1)}}
+.cl-bar{transform-box:fill-box;transform-origin:50% 100%;animation:clload .5s cubic-bezier(.2,.8,.2,1) both}
+.cl-bar.b2{animation-delay:.13s}.cl-bar.b3{animation-delay:.26s}
+.brandlogo:hover .cl-bar{animation-name:clload2}
+.ai-card{background:linear-gradient(180deg,#0e1626,#0a0f1a);border:1px solid var(--line2);box-shadow:0 30px 80px -30px rgba(0,0,0,.85)}
+#aiInput:focus{border-color:rgba(47,155,255,.5)}
+.ai-chip{display:inline-flex;align-items:center;gap:5px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;padding:4px 9px;border-radius:8px;background:rgba(47,155,255,.08);border:1px solid rgba(47,155,255,.22);color:#cfe0f5;white-space:nowrap}
+.ai-pill{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;padding:6px 10px;border-radius:9px;background:rgba(12,19,32,.92);border:1px solid var(--line2);color:var(--dim);box-shadow:0 10px 28px -10px rgba(0,0,0,.75);backdrop-filter:blur(6px)}
+@keyframes aifloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.ai-float{animation:aifloat 4.5s ease-in-out infinite}
+.navitem{animation:itempop .5s cubic-bezier(.18,.7,.2,1.1) both;opacity:0}
+.navlink{color:var(--dim);font-size:14px;font-weight:500;transition:.15s}
+.navlink:hover{color:var(--text)}
+.langbtn{color:var(--faint);background:transparent;cursor:pointer;transition:.15s;line-height:1}
+.langbtn.on{color:var(--text);background:rgba(47,155,255,.14)}
+.langbtn:hover{color:var(--text)}
+.feature-ic{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:rgba(47,155,255,.1);border:1px solid rgba(47,155,255,.25)}
+details>summary{list-style:none;cursor:pointer}
+details>summary::-webkit-details-marker{display:none}
+details[open] .faq-plus{transform:rotate(45deg)}
+.faq-plus{transition:.2s;color:var(--accent)}
+.dotline{stroke:rgba(47,155,255,.4);stroke-width:1.4;stroke-dasharray:4 4;fill:none}
+.demo-frame{border:1px solid var(--line2);border-radius:16px;overflow:hidden;background:#0a0d12;box-shadow:0 40px 120px -40px rgba(0,0,0,.9),0 0 0 1px rgba(47,155,255,.08)}
+.chatmsg{opacity:0;transform:translateY(8px);transition:.4s}
+.chatmsg.in{opacity:1;transform:none}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-track{background:#080c12}::-webkit-scrollbar-thumb{background:#243042;border-radius:6px}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="glow" style="width:520px;height:520px;background:#2f9bff;top:-160px;left:55%;opacity:.22"></div>
+<div class="glow" style="width:440px;height:440px;background:#38e0c8;top:380px;left:-120px;opacity:.14"></div>
+
+<!-- NAV -->
+<div class="fixed top-3 inset-x-0 z-50 px-3">
+  <nav id="nav" class="navpill max-w-6xl mx-auto flex items-center justify-between gap-3 rounded-2xl glass-nav pl-3.5 pr-2 py-2">
+    <a href="#top" class="navitem brandlogo flex items-center gap-2.5" style="animation-delay:.06s">
+      <span class="w-8 h-8 rounded-lg grad-bg flex items-center justify-center" style="box-shadow:0 4px 16px -4px rgba(47,155,255,.7)">
+        <svg width="18" height="18" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="11" rx="1.5" fill="none" stroke="#04101f" stroke-width="2"/><rect class="cl-bar b1" x="5" y="9.3" width="2.3" height="6.4" rx="0.5" fill="#04101f"/><rect class="cl-bar b2" x="7.9" y="9.3" width="2.3" height="6.4" rx="0.5" fill="#04101f"/><rect class="cl-bar b3" x="10.8" y="9.3" width="2.3" height="6.4" rx="0.5" fill="#04101f"/></svg>
+      </span>
+      <span class="font-extrabold text-[16px] tracking-tight">Container<span class="grad-text">Load</span></span>
+    </a>
+    <div class="hidden md:flex items-center gap-1">
+      <a href="#demo" class="navitem navlink px-3 py-1.5 rounded-lg" style="animation-delay:.13s">Tool</a>
+      <a data-i18n="nav_features" href="#features" class="navitem navlink px-3 py-1.5 rounded-lg" style="animation-delay:.19s">Funktionen</a>
+      <a data-i18n="nav_how" href="#how" class="navitem navlink px-3 py-1.5 rounded-lg" style="animation-delay:.25s">So funktioniert’s</a>
+      <a href="#faq" class="navitem navlink px-3 py-1.5 rounded-lg" style="animation-delay:.31s">FAQ</a>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="navitem hidden sm:flex items-center rounded-lg overflow-hidden mono text-[12px]" style="border:1px solid var(--line2);animation-delay:.42s">
+        <button data-lang="de" class="langbtn flex items-center gap-1.5 px-2 py-1 font-semibold"><svg width="15" height="10" viewBox="0 0 5 3" style="border-radius:1px;flex-shrink:0"><rect width="5" height="3" fill="#FFCE00"/><rect width="5" height="2" fill="#D00"/><rect width="5" height="1" fill="#000"/></svg>DE</button>
+        <button data-lang="en" class="langbtn flex items-center gap-1.5 px-2 py-1 font-semibold" style="border-left:1px solid var(--line2)"><svg width="15" height="10" viewBox="0 0 60 30" style="border-radius:1px;flex-shrink:0"><clipPath id="ukc"><path d="M0 0v30h60V0z"/></clipPath><g clip-path="url(#ukc)"><path d="M0 0v30h60V0z" fill="#012169"/><path d="M0 0l60 30m0-30L0 30" stroke="#fff" stroke-width="6"/><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"/><path d="M30 0v30M0 15h60" stroke="#C8102E" stroke-width="6"/></g></svg>EN</button>
+      </div>
+      <a data-i18n="nav_open" href="app.html" class="navitem btn btn-primary text-[13px] px-4 py-2" style="animation-delay:.48s">Tool öffnen</a>
+      <button id="burger" class="navitem md:hidden p-1.5" style="color:var(--dim);animation-delay:.48s">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div id="mobileMenu" class="md:hidden hidden max-w-6xl mx-auto mt-2 rounded-2xl glass-nav px-4 py-3">
+    <div class="flex flex-col gap-0.5">
+      <a href="#demo" class="navlink py-2">Tool</a>
+      <a data-i18n="nav_features" href="#features" class="navlink py-2">Funktionen</a>
+      <a data-i18n="nav_how" href="#how" class="navlink py-2">So funktioniert’s</a>
+      <a href="#faq" class="navlink py-2">FAQ</a>
+      <div class="flex items-center gap-2 mt-2 pt-2.5" style="border-top:1px solid var(--line)">
+        <button data-lang="de" class="langbtn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg mono text-[13px] font-semibold" style="border:1px solid var(--line2)"><svg width="15" height="10" viewBox="0 0 5 3" style="border-radius:1px;flex-shrink:0"><rect width="5" height="3" fill="#FFCE00"/><rect width="5" height="2" fill="#D00"/><rect width="5" height="1" fill="#000"/></svg>DE</button>
+        <button data-lang="en" class="langbtn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg mono text-[13px] font-semibold" style="border:1px solid var(--line2)"><svg width="15" height="10" viewBox="0 0 60 30" style="border-radius:1px;flex-shrink:0"><clipPath id="ukm"><path d="M0 0v30h60V0z"/></clipPath><g clip-path="url(#ukm)"><path d="M0 0v30h60V0z" fill="#012169"/><path d="M0 0l60 30m0-30L0 30" stroke="#fff" stroke-width="6"/><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"/><path d="M30 0v30M0 15h60" stroke="#C8102E" stroke-width="6"/></g></svg>EN</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<header id="top" class="relative z-10 max-w-7xl mx-auto px-5 pt-32 md:pt-40 pb-20">
+  <div class="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+    <div class="text-center lg:text-left">
+      <div data-i18n="hero_badge" class="inline-flex items-center gap-2 mono text-[11px] px-3 py-1.5 rounded-full mb-6" style="border:1px solid var(--line2);color:var(--dim)">
+        <span class="live-dot"></span> PALETTENGENAU · 3D-ANSICHT
+      </div>
+      <h1 data-i18n="hero_h1" class="font-extrabold leading-[1.02] tracking-tight text-[46px] md:text-[56px]">
+        Jede Ladung.<br><span class="grad-text">Im richtigen Container.</span>
+      </h1>
+      <p data-i18n="hero_sub" class="mt-6 text-[17px] md:text-[19px] leading-relaxed max-w-[560px] mx-auto lg:mx-0" style="color:var(--dim)">
+        3D-Beladung, palettengenaue Berechnung und automatische Container-Empfehlung – in Sekunden, direkt im Browser. Kein Excel, kein Schätzen.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3 justify-center lg:justify-start">
+        <a data-i18n="hero_cta1" href="app.html" class="btn btn-primary text-[15px] px-6 py-3.5">Tool öffnen – kostenlos</a>
+        <a data-i18n="hero_cta2" href="#demo" class="btn btn-ghost text-[15px] px-6 py-3.5">Direkt ausprobieren <span style="color:var(--accent)">↓</span></a>
+      </div>
+      <div data-i18n="hero_trust" class="mt-7 flex items-center gap-5 justify-center lg:justify-start mono text-[12px]" style="color:var(--faint)">
+        <span>✓ Ohne Account</span><span>✓ 0 € Setup</span><span>✓ ISO 668</span>
+      </div>
+    </div>
+    <div class="relative reveal">
+      <div class="hidden md:flex absolute -top-3 left-7 z-20 ai-float" style="animation-delay:.2s"><span class="ai-pill"><span style="color:var(--accent)">▣</span> 20' GP</span></div>
+      <div class="hidden md:flex absolute -top-4 right-5 z-20 ai-float" style="animation-delay:.6s"><span class="ai-pill">22× EUR 120×80</span></div>
+      <div class="ai-card rounded-2xl p-5">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="w-9 h-9 rounded-xl grad-bg flex items-center justify-center" style="box-shadow:0 6px 20px -6px rgba(47,155,255,.6)"><svg width="17" height="17" viewBox="0 0 24 24"><path d="M12 2.5l1.9 5L19 9.4l-5.1 1.9L12 16l-1.9-4.7L5 9.4l5.1-1.9z" fill="#04101f"/><circle cx="18.5" cy="17.5" r="1.6" fill="#04101f"/></svg></span>
+          <div class="leading-tight">
+            <div class="font-bold text-[15px]">ContainerLoad <span class="grad-text">AI</span></div>
+            <div data-i18n="ai_sub" class="mono text-[10px] mt-0.5" style="color:var(--faint)">Sprache → Ladeplan</div>
+          </div>
+          <span class="ml-auto mono text-[9px] px-2 py-1 rounded-md" style="background:rgba(56,224,200,.12);color:#7af0dd;border:1px solid rgba(56,224,200,.32)">PREVIEW</span>
+        </div>
+        <textarea id="aiInput" rows="3" class="w-full rounded-xl p-3" style="background:#090e18;border:1px solid var(--line2);color:var(--text);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px;resize:none;outline:none"></textarea>
+        <div id="aiResult" class="mt-3 flex flex-wrap gap-1.5 items-center" style="min-height:26px"></div>
+        <button id="aiGo" data-i18n="ai_go" class="btn btn-primary w-full justify-center mt-3 text-[14px] py-3">Im 3D-Rechner öffnen →</button>
+        <div data-i18n="ai_foot" class="mono text-[10px] mt-2.5 text-center" style="color:var(--faint)">läuft direkt im Browser · kein Login</div>
+      </div>
+    </div>
+  </div>
+
+</header>
+
+<!-- TOOL -->
+<section id="demo" class="relative z-10 max-w-7xl mx-auto px-5 pt-4 pb-16">
+  <div class="reveal text-center max-w-2xl mx-auto mb-8">
+    <div data-i18n="tool_ey" class="mono text-[12px] tracking-[0.2em] uppercase mb-3" style="color:var(--accent)">Der Rechner</div>
+    <h2 data-i18n="tool_h" class="font-extrabold text-[30px] md:text-[40px] tracking-tight">Probier’s direkt aus.</h2>
+    <p data-i18n="tool_p" class="mt-3 text-[15px]" style="color:var(--dim)">Maße eingeben, Container wählen, 3D drehen – kein Login, nichts zu installieren.</p>
+  </div>
+  <div class="reveal demo-frame">
+    <div class="flex items-center gap-2 px-4 py-2.5" style="background:#0c121b;border-bottom:1px solid var(--line)">
+      <span class="w-3 h-3 rounded-full" style="background:#ff5d6c"></span>
+      <span class="w-3 h-3 rounded-full" style="background:#ffb454"></span>
+      <span class="w-3 h-3 rounded-full" style="background:#37d39f"></span>
+      <span class="mono text-[11px] ml-3" style="color:var(--faint)">containerload.io</span>
+      <a data-i18n="tool_full" href="app.html" class="ml-auto mono text-[11px]" style="color:var(--accent)">Vollbild öffnen ↗</a>
+    </div>
+    <iframe src="app.html" title="ContainerLoad" style="width:100%;height:760px;border:0;display:block;background:#070a0f" loading="lazy"></iframe>
+  </div>
+  <p data-i18n="tool_cap" class="text-center mt-4 mono text-[11px]" style="color:var(--faint)">Läuft am besten am Desktop · auf dem Handy „Vollbild öffnen“ nutzen</p>
+</section>
+
+<!-- FEATURES -->
+<section id="features" class="relative z-10 max-w-7xl mx-auto px-5 py-20">
+  <div class="reveal max-w-2xl">
+    <div data-i18n="feat_ey" class="mono text-[12px] tracking-[0.2em] uppercase mb-3" style="color:var(--accent)">Funktionen</div>
+    <h2 data-i18n="feat_h" class="font-extrabold text-[34px] md:text-[42px] tracking-tight leading-tight">Alles, was du zum Beladen brauchst.<br><span style="color:var(--dim)">Und nichts, was nur im Weg ist.</span></h2>
+  </div>
+  <div class="mt-12 grid md:grid-cols-3 gap-4">
+    <div class="card p-6 reveal md:col-span-2" style="background:linear-gradient(135deg,rgba(47,155,255,.08),rgba(12,17,26,.7))">
+      <div class="feature-ic mb-4">🧊</div>
+      <h3 data-i18n="f1_h" class="font-bold text-[19px]">3D-Ansicht in Echtzeit</h3>
+      <p data-i18n="f1_p" class="mt-2 text-[14px] leading-relaxed" style="color:var(--dim)">Drehen, zoomen, prüfen. Die Packstücke erscheinen nacheinander im Container – mit weichen Schatten und ruhiger Eigendrehung. Du siehst sofort, wie deine Ladung wirklich steht.</p>
+    </div>
+    <div class="card p-6 reveal">
+      <div class="feature-ic mb-4">📐</div>
+      <h3 data-i18n="f2_h" class="font-bold text-[19px]">Exakte Paletten-Logik</h3>
+      <p data-i18n="f2_p" class="mt-2 text-[14px] leading-relaxed" style="color:var(--dim)">Erkennt auch gedrehte Lademuster – so passen <b style="color:var(--text)">11 EUR-Paletten statt 9</b> in den 20-Fuß. Genau die Werte aus den Speditionstabellen.</p>
+    </div>
+    <div class="card p-6 reveal">
+      <div class="feature-ic mb-4">🎯</div>
+      <h3 data-i18n="f3_h" class="font-bold text-[19px]">Smarte Container-Empfehlung</h3>
+      <p data-i18n="f3_p" class="mt-2 text-[14px] leading-relaxed" style="color:var(--dim)">Passt nicht alles rein? Das Tool schlägt die günstigste Kombination vor – <b style="color:var(--text)">1× 45' + 1× 20'</b> statt 2× 45'.</p>
+    </div>
+    <div class="card p-6 reveal">
+      <div class="feature-ic mb-4">↻</div>
+      <h3 data-i18n="f4_h" class="font-bold text-[19px]">Dreh- & Stapel-Regeln</h3>
+      <p data-i18n="f4_p" class="mt-2 text-[14px] leading-relaxed" style="color:var(--dim)">Für jedes Packstück einzeln: stapelbar, nicht stapelbar, um 90° drehbar. Realistisch wie an der Rampe.</p>
+    </div>
+    <div class="card p-6 reveal">
+      <div class="feature-ic mb-4">⚖️</div>
+      <h3 data-i18n="f5_h" class="font-bold text-[19px]">Gewicht & Zuladung</h3>
+      <p data-i18n="f5_p" class="mt-2 text-[14px] leading-relaxed" style="color:var(--dim)">Die maximale Zuladung jedes Containers ist hinterlegt – du wirst gewarnt, bevor du überladen losfährst.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="relative z-10 max-w-7xl mx-auto px-5 py-16">
+  <div class="reveal text-center max-w-2xl mx-auto">
+    <div data-i18n="how_ey" class="mono text-[12px] tracking-[0.2em] uppercase mb-3" style="color:var(--accent)">So funktioniert's</div>
+    <h2 data-i18n="how_h" class="font-extrabold text-[32px] md:text-[40px] tracking-tight">In drei Schritten zum Ladeplan</h2>
+  </div>
+  <div class="mt-12 grid md:grid-cols-3 gap-4">
+    <div class="card p-6 reveal">
+      <div class="mono text-[13px] grad-text font-bold mb-3">01</div>
+      <h3 data-i18n="s1_h" class="font-bold text-[18px]">Container & Ladung</h3>
+      <p data-i18n="s1_p" class="mt-2 text-[14px]" style="color:var(--dim)">Container wählen oder eigene Maße eingeben. Dann die Packstücke mit Anzahl, Maßen und Gewicht – alles in Zentimetern.</p>
+    </div>
+    <div class="card p-6 reveal">
+      <div class="mono text-[13px] grad-text font-bold mb-3">02</div>
+      <h3 data-i18n="s2_h" class="font-bold text-[18px]">Live-Berechnung</h3>
+      <p data-i18n="s2_p" class="mt-2 text-[14px]" style="color:var(--dim)">ContainerLoad berechnet im Hintergrund die beste Stauung – palettengenau bei einer Sorte, mit Suchalgorithmus bei gemischter Ladung.</p>
+    </div>
+    <div class="card p-6 reveal">
+      <div class="mono text-[13px] grad-text font-bold mb-3">03</div>
+      <h3 data-i18n="s3_h" class="font-bold text-[18px]">Ergebnis & Plan</h3>
+      <p data-i18n="s3_p" class="mt-2 text-[14px]" style="color:var(--dim)">Du siehst Auslastung, Lagen und Gewicht – und bekommst eine klare Empfehlung, falls nicht alles passt. Dazu der 3D-Plan zum Drehen.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="relative z-10 max-w-3xl mx-auto px-5 py-20">
+  <div class="reveal text-center mb-10">
+    <div class="mono text-[12px] tracking-[0.2em] uppercase mb-3" style="color:var(--accent)">FAQ</div>
+    <h2 data-i18n="faq_h" class="font-extrabold text-[32px] md:text-[40px] tracking-tight">Häufige Fragen</h2>
+  </div>
+  <div class="flex flex-col gap-3">
+    <details class="reveal card p-5"><summary data-i18n="q1_s" class="flex items-center justify-between font-semibold text-[16px]">Ist der Rechner wirklich kostenlos?<span class="faq-plus text-[22px]">+</span></summary><p data-i18n="q1_a" class="mt-3 text-[14px] leading-relaxed" style="color:var(--dim)">Ja, komplett. Der 3D-Rechner inkl. Container-Empfehlung ist gratis und ohne Account nutzbar – einfach öffnen und loslegen.</p></details>
+    <details class="reveal card p-5"><summary data-i18n="q2_s" class="flex items-center justify-between font-semibold text-[16px]">Wie genau ist die Berechnung?<span class="faq-plus text-[22px]">+</span></summary><p data-i18n="q2_a" class="mt-3 text-[14px] leading-relaxed" style="color:var(--dim)">Bei einer Palettensorte rechnet das Tool palettengenau (z.B. 11 EUR-Paletten im 20-Fuß, wie in den Speditionstabellen). Bei gemischter Ladung sucht ein Algorithmus die beste Stauung. Gerechnet wird rein nach Geometrie – Schwerpunkt und Achslast sind noch nicht enthalten, also keine Garantie für die echte Lastverteilung.</p></details>
+    <details class="reveal card p-5"><summary data-i18n="q3_s" class="flex items-center justify-between font-semibold text-[16px]">Brauche ich ein Konto?<span class="faq-plus text-[22px]">+</span></summary><p data-i18n="q3_a" class="mt-3 text-[14px] leading-relaxed" style="color:var(--dim)">Nein. Du öffnest das Tool und legst sofort los — nichts zu installieren, nichts zu registrieren.</p></details>
+    <details class="reveal card p-5"><summary data-i18n="q4_s" class="flex items-center justify-between font-semibold text-[16px]">Läuft es auf dem Handy?<span class="faq-plus text-[22px]">+</span></summary><p data-i18n="q4_a" class="mt-3 text-[14px] leading-relaxed" style="color:var(--dim)">Ja, das Tool ist responsiv und läuft im mobilen Browser. Für die Eingabe vieler Positionen ist ein größerer Bildschirm aber angenehmer.</p></details>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="relative z-10 max-w-5xl mx-auto px-5 py-16">
+  <div class="reveal rounded-3xl p-10 md:p-14 text-center relative overflow-hidden" style="border:1px solid rgba(47,155,255,.3);background:linear-gradient(135deg,rgba(47,155,255,.12),rgba(56,224,200,.06),rgba(12,17,26,.8))">
+    <div class="glow" style="width:300px;height:300px;background:#2f9bff;top:-100px;left:50%;position:absolute;opacity:.3"></div>
+    <h2 data-i18n="cta_h" class="relative font-extrabold text-[30px] md:text-[42px] tracking-tight">Plane deine nächste Ladung – jetzt.</h2>
+    <p data-i18n="cta_p" class="relative mt-4 text-[16px]" style="color:var(--dim)">In 30 Sekunden weißt du, ob's reinpasst und in welchen Container.</p>
+    <a data-i18n="cta_a" href="app.html" class="relative btn btn-primary text-[16px] px-8 py-4 mt-8">Tool kostenlos öffnen</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="relative z-10" style="border-top:1px solid var(--line)">
+  <div class="max-w-7xl mx-auto px-5 py-12 grid md:grid-cols-4 gap-8">
+    <div class="md:col-span-1">
+      <div class="brandlogo flex items-center gap-2.5 mb-3">
+        <span class="w-7 h-7 rounded-lg grad-bg flex items-center justify-center"><svg width="15" height="15" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="11" rx="1.5" fill="none" stroke="#04101f" stroke-width="2"/><rect class="cl-bar b1" x="5" y="9.3" width="2.3" height="6.4" rx="0.5" fill="#04101f"/><rect class="cl-bar b2" x="7.9" y="9.3" width="2.3" height="6.4" rx="0.5" fill="#04101f"/><rect class="cl-bar b3" x="10.8" y="9.3" width="2.3" height="6.4" rx="0.5" fill="#04101f"/></svg></span>
+        <span class="font-extrabold text-[15px]">Container<span class="grad-text">Load</span></span>
+      </div>
+      <p class="text-[13px] leading-relaxed" data-i18n="footer_tag" style="color:var(--faint)">Kein Excel. Kein Schätzen.<br>Nur der richtige Container. <span style="white-space:nowrap">· Bremen <svg width="14" height="10" viewBox="0 0 5 3" style="display:inline-block;vertical-align:middle;border-radius:1px;margin-left:1px"><rect width="5" height="3" fill="#FFCE00"/><rect width="5" height="2" fill="#D00"/><rect width="5" height="1" fill="#000"/></svg></span></p>
+    </div>
+    <div><div data-i18n="footer_prod" class="mono text-[11px] tracking-widest uppercase mb-3" style="color:var(--faint)">Produkt</div><div class="flex flex-col gap-2 text-[14px]" style="color:var(--dim)"><a data-i18n="fl_open" href="app.html" class="navlink">Tool öffnen</a><a data-i18n="nav_features" href="#features" class="navlink">Funktionen</a><a data-i18n="nav_how" href="#how" class="navlink">So funktioniert’s</a><a href="#faq" class="navlink">FAQ</a></div></div>
+    <div><div data-i18n="footer_res" class="mono text-[11px] tracking-widest uppercase mb-3" style="color:var(--faint)">Ressourcen</div><div class="flex flex-col gap-2 text-[14px]" style="color:var(--dim)"><a data-i18n="fl_demo" href="#demo" class="navlink">Live-Demo</a><a href="#faq" class="navlink">FAQ</a></div></div>
+    <div><div data-i18n="footer_legal" class="mono text-[11px] tracking-widest uppercase mb-3" style="color:var(--faint)">Rechtliches</div><div class="flex flex-col gap-2 text-[14px]" style="color:var(--dim)"><a data-i18n="fl_imp" href="impressum.html" class="navlink">Impressum</a><a data-i18n="fl_priv" href="datenschutz.html" class="navlink">Datenschutz</a><a data-i18n="fl_contact" href="mailto:contact.containerload@gmail.com" class="navlink">Kontakt</a></div></div>
+  </div>
+  <div class="max-w-7xl mx-auto px-5 py-5 flex flex-col sm:flex-row items-center justify-between gap-2" style="border-top:1px solid var(--line);color:var(--faint)">
+    <span class="mono text-[11px]">© 2026 ContainerLoad · ISO 668 · cm · kg</span>
+    <span data-i18n="foot_disc" class="mono text-[11px]">geometrische Schätzung · keine Achslast-Garantie</span>
+  </div>
+</footer>
+
+<script>
+// nav scroll state
+const nav=document.getElementById('nav');
+addEventListener('scroll',()=>{nav.classList.toggle('scrolled',scrollY>20);});
+// mobile menu
+const burger=document.getElementById('burger'),mm=document.getElementById('mobileMenu');
+burger.addEventListener('click',()=>mm.classList.toggle('hidden'));
+mm.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>mm.classList.add('hidden')));
+// reveal on scroll
+const io=new IntersectionObserver((es)=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+// waitlist buttons
+document.querySelectorAll('[data-wl]').forEach(b=>b.addEventListener('click',()=>{const o=b.textContent;b.textContent='✓ Notiert — wir melden uns';setTimeout(()=>b.textContent=o,2400);}));
+// clean anchor scrolling (kein # in der Adressleiste)
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    var id=a.getAttribute('href').slice(1);
+    var el=id?document.getElementById(id):null;
+    e.preventDefault();
+    var y=el?(el.getBoundingClientRect().top+window.pageYOffset-80):0;
+    window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
+    if(history.replaceState)history.replaceState(null,'',location.pathname+location.search);
+  });
+});
+
+</script>
+
+<script>
+(function(){
+  var EN={"nav_features": "Features", "nav_how": "How it works", "nav_open": "Open tool", "hero_badge": "<span class=\"live-dot\"></span> PALLET-EXACT · 3D VIEW", "hero_h1": "Every load.<br><span class=\"grad-text\">In the right container.</span>", "hero_sub": "3D loading, pallet-exact calculation and automatic container recommendation – in seconds, right in your browser. No Excel, no guessing.", "hero_cta1": "Open the tool – free", "hero_cta2": "Try it now <span style=\"color:var(--accent)\">↓</span>", "hero_trust": "<span>✓ No account</span><span>✓ €0 setup</span><span>✓ ISO 668</span>", "stat1d": "EUR pallets in a 20-ft, exact", "stat2d": "Loading in real time", "stat3d": "Packing algorithm for mixed loads", "stat4d": "setup, no install", "tool_ey": "The calculator", "tool_h": "Try it right here.", "tool_p": "Enter dimensions, pick a container, rotate in 3D – no login, nothing to install.", "tool_full": "Open fullscreen ↗", "tool_cap": "Runs best on desktop · on mobile use “Open fullscreen”", "feat_ey": "Features", "feat_h": "Everything you need to load.<br><span style=\"color:var(--dim)\">And nothing that just gets in the way.</span>", "f1_h": "Real-time 3D view", "f1_p": "Rotate, zoom, check. The items appear one by one in the container – with soft shadows and a calm auto-rotate. You instantly see how your load really sits.", "f2_h": "Exact pallet logic", "f2_p": "Detects rotated loading patterns too – so <b style=\"color:var(--text)\">11 EUR pallets fit instead of 9</b> in a 20-ft. Exactly the values from the forwarder tables.", "f3_h": "Smart container recommendation", "f3_p": "Not everything fits? The tool suggests the cheapest combination – <b style=\"color:var(--text)\">1× 45' + 1× 20'</b> instead of 2× 45'.", "f4_h": "Rotation & stacking rules", "f4_p": "For each item individually: stackable, non-stackable, rotatable by 90°. Realistic, like at the ramp.", "f5_h": "Weight & payload", "f5_p": "Every container's max payload is built in – you're warned before you set off overloaded.", "how_ey": "How it works", "how_h": "Your load plan in three steps", "s1_h": "Container & cargo", "s1_p": "Pick a container or enter your own dimensions. Then the items with quantity, dimensions and weight – all in centimetres.", "s2_h": "Live calculation", "s2_p": "ContainerLoad computes the best stow in the background – pallet-exact for a single type, with a search algorithm for mixed loads.", "s3_h": "Result & plan", "s3_p": "You see usage, layers and weight – plus a clear recommendation if not everything fits. Along with the 3D plan to rotate.", "faq_h": "Frequent questions", "q1_s": "Is the calculator really free?<span class=\"faq-plus text-[22px]\">+</span>", "q1_a": "Yes, completely. The 3D calculator incl. container recommendation is free and usable without an account – just open it and go.", "q2_s": "How accurate is the calculation?<span class=\"faq-plus text-[22px]\">+</span>", "q2_a": "For a single pallet type the tool calculates pallet-exact (e.g. 11 EUR pallets in a 20-ft, as in the forwarder tables). For mixed loads an algorithm finds the best stow. It's purely geometric – centre of gravity and axle load aren't included yet, so no guarantee for the real weight distribution.", "q3_s": "Do I need an account?<span class=\"faq-plus text-[22px]\">+</span>", "q3_a": "No. You open the tool and start right away — nothing to install, nothing to register.", "q4_s": "Does it work on mobile?<span class=\"faq-plus text-[22px]\">+</span>", "q4_a": "Yes, the tool is responsive and runs in the mobile browser. For entering many positions a bigger screen is more comfortable, though.", "cta_h": "Plan your next load – now.", "cta_p": "In 30 seconds you know whether it fits and in which container.", "cta_a": "Open the tool – free", "footer_prod": "Product", "footer_res": "Resources", "footer_legal": "Legal", "fl_open": "Open tool", "fl_demo": "Live demo", "fl_imp": "Legal notice", "fl_priv": "Privacy", "fl_contact": "Contact", "foot_disc": "geometric estimate · no axle-load guarantee", "footer_tag": "No Excel. No guessing.<br>Just the right container. <span style=\"white-space:nowrap\">· Bremen <svg width=\"14\" height=\"10\" viewBox=\"0 0 5 3\" style=\"display:inline-block;vertical-align:middle;border-radius:1px;margin-left:1px\"><rect width=\"5\" height=\"3\" fill=\"#FFCE00\"/><rect width=\"5\" height=\"2\" fill=\"#D00\"/><rect width=\"5\" height=\"1\" fill=\"#000\"/></svg></span>", "ai_sub": "Language → load plan", "ai_go": "Open in 3D calculator →", "ai_foot": "runs in your browser · no login"};
+  var els=[].slice.call(document.querySelectorAll('[data-i18n]'));
+  var DE={};
+  els.forEach(function(el){var k=el.getAttribute('data-i18n'); if(DE[k]===undefined) DE[k]=el.innerHTML;});
+  function appHref(lang){return 'app.html'+(lang==='en'?'?lang=en':'');}
+  function setLang(lang){
+    lang=(lang==='en')?'en':'de';
+    els.forEach(function(el){var k=el.getAttribute('data-i18n');var v=(lang==='en')?(EN[k]!==undefined?EN[k]:DE[k]):DE[k]; if(v!==undefined) el.innerHTML=v;});
+    document.documentElement.lang=lang;
+    [].slice.call(document.querySelectorAll('.langbtn')).forEach(function(b){b.classList.toggle('on',b.getAttribute('data-lang')===lang);});
+    [].slice.call(document.querySelectorAll('a[href^="app.html"]')).forEach(function(a){a.setAttribute('href',appHref(lang));});
+    var ifr=document.querySelector('iframe[title="ContainerLoad"]'); if(ifr){var want=appHref(lang); if(ifr.getAttribute('src')!==want) ifr.setAttribute('src',want);}
+    var _ai=document.getElementById('aiInput'); if(_ai){ _ai.placeholder = lang==='en' ? 'e.g. 20 euro pallets 120x80x110, stackable' : 'z. B. 20 Europaletten 120x80x110, stapelbar'; }
+    if(window.__renderAI){ window.__renderAI(); }
+    try{localStorage.setItem('cl_lang',lang);}catch(e){}
+  }
+  [].slice.call(document.querySelectorAll('.langbtn')).forEach(function(b){b.addEventListener('click',function(){setLang(b.getAttribute('data-lang'));});});
+  var initial='de';
+  try{var sv=localStorage.getItem('cl_lang'); if(sv){initial=sv;} else if((navigator.language||'').toLowerCase().indexOf('de')!==0){initial='en';}}
+  catch(e){if((navigator.language||'').toLowerCase().indexOf('de')!==0){initial='en';}}
+  function parseCargoText(text){
+    if(!text) return [];
+    var out=[]; var toNum=function(x){return parseFloat(String(x).replace(",","."));};
+    var lines=text.split(/[\n;]+/).map(function(x){return x.trim();}).filter(Boolean);
+    var PP=[{re:/euro\s*-?\s*palette|eur\s*-?\s*palette|europalette|epal/i,l:120,w:80},{re:/industrie\s*-?\s*palette|industrial\s*pallet|industriepalette/i,l:120,w:100}];
+    for(var ii=0;ii<lines.length;ii++){
+      var line=lines[ii], low=line.toLowerCase(), l=null,w=null,h=null;
+      var dim=line.match(/(\d+(?:[.,]\d+)?)\s*(mm|cm|m)?\s*[x×\*\/]\s*(\d+(?:[.,]\d+)?)\s*(mm|cm|m)?\s*[x×\*\/]\s*(\d+(?:[.,]\d+)?)\s*(mm|cm|m)?/i);
+      if(dim){ l=toNum(dim[1]); w=toNum(dim[3]); h=toNum(dim[5]); var u=(dim[6]||dim[4]||dim[2]||"").toLowerCase(); if(u==="m"){l*=100;w*=100;h*=100;} else if(u==="mm"){l/=10;w/=10;h/=10;} }
+      var pal=null; for(var p=0;p<PP.length;p++){ if(PP[p].re.test(line)){ pal=PP[p]; break; } }
+      if(!dim&&!pal) continue;
+      if(!dim&&pal){ l=pal.l; w=pal.w; h=110; }
+      var qty=1; var qm=line.match(/(\d+)\s*(?:x\b|×|stk\.?|stück|paletten?|pallets?|kartons?|cartons?|colli|packst(?:ü|ue)cke?|boxes?|pcs|units?)/i);
+      if(qm) qty=parseInt(qm[1],10); else { var lead=line.match(/^\s*(\d+)\b/); if(lead&&(!dim||line.indexOf(dim[0])>0)) qty=parseInt(lead[1],10); }
+      if(!isFinite(qty)||qty<1) qty=1;
+      var weight=0; var wm=line.match(/(\d+(?:[.,]\d+)?)\s*(kg|kilo|tonnen?|to\b|t\b)/i); if(wm){ weight=toNum(wm[1]); if(/^(t|to|tonn)/i.test(wm[2])) weight*=1000; }
+      var stackable=true; if(/nicht\s*stapel|non[-\s]?stack|not\s*stack|keine?\s*stapel/i.test(low)) stackable=false;
+      var rotatable=true; if(/nicht\s*drehbar|not\s*rotat|no\s*rotat/i.test(low)) rotatable=false;
+      var name=line.replace(/(\d+(?:[.,]\d+)?)\s*(mm|cm|m)?\s*[x×\*\/]\s*(\d+(?:[.,]\d+)?)\s*(mm|cm|m)?\s*[x×\*\/]\s*(\d+(?:[.,]\d+)?)\s*(mm|cm|m)?/i,"").replace(/(\d+(?:[.,]\d+)?)\s*(kg|kilo|tonnen?|to\b|t\b)/i,"").replace(/(\d+)\s*(x\b|×|stk\.?|stück|paletten?|pallets?|kartons?|cartons?|colli|packst(?:ü|ue)cke?|boxes?|pcs|units?)/i,"").replace(/nicht\s*stapelbar|stapelbar|non[-\s]?stackable|stackable|nicht\s*drehbar/ig,"").replace(/^[\s,\-–|:]+|[\s,\-–|:]+$/g,"").replace(/^\s*\d+\s+/,"").replace(/\s+/g," ").trim();
+      if(!name) name=pal?(pal.w===80?"Europalette":"Palette"):"Position";
+      name=name.charAt(0).toUpperCase()+name.slice(1); if(name.length>22) name=name.slice(0,22);
+      out.push({qty:qty,l:Math.max(1,Math.round(l)),w:Math.max(1,Math.round(w)),h:Math.max(1,Math.round(h)),weight:Math.max(0,Math.round(weight)),stackable:stackable,rotatable:rotatable,name:name});
+    }
+    return out;
+  }
+  (function(){
+    var input=document.getElementById('aiInput'), out=document.getElementById('aiResult'), go=document.getElementById('aiGo');
+    if(!input||!out||!go) return;
+    function curLang(){ return document.documentElement.lang==='en'?'en':'de'; }
+    window.__renderAI=function(){
+      var lang=curLang(), text=(input.value||'').trim();
+      if(!text){ out.innerHTML='<span style="color:var(--faint);font-size:11.5px">'+(lang==='en'?'Describe your cargo — I detect sizes, quantities &amp; weight.':'Beschreib deine Ladung — ich erkenne Maße, Mengen &amp; Gewicht.')+'</span>'; go.style.opacity=.5; go.style.pointerEvents='none'; return; }
+      var rows=parseCargoText(text);
+      if(!rows.length){ out.innerHTML='<span style="color:#ffb454;font-size:11.5px">'+(lang==='en'?'Nothing detected yet…':'Noch nichts erkannt…')+'</span>'; go.style.opacity=.5; go.style.pointerEvents='none'; return; }
+      go.style.opacity=1; go.style.pointerEvents='auto';
+      var totQty=0, vol=0; rows.forEach(function(r){ totQty+=r.qty; vol+=r.qty*r.l*r.w*r.h/1e6; });
+      var chips=rows.slice(0,3).map(function(r){ return '<span class="ai-chip">'+r.qty+'× '+(r.name||'Pos')+' <span style="color:var(--faint)">'+r.l+'×'+r.w+'×'+r.h+'</span>'+(r.stackable?'':' · '+(lang==='en'?'no-stack':'n.stapelb.'))+'</span>'; }).join('');
+      if(rows.length>3) chips+='<span class="ai-chip">+'+(rows.length-3)+'</span>';
+      out.innerHTML='<span class="ai-chip" style="border-color:rgba(56,224,200,.4);color:#9beede">Σ '+totQty+' '+(lang==='en'?'pcs':'Stk')+' · '+vol.toFixed(1)+' m³</span>'+chips;
+    };
+    var t; input.addEventListener('input',function(){ clearTimeout(t); t=setTimeout(window.__renderAI,120); });
+    input.addEventListener('focus',function(){ if(input.dataset.def==='1'){ input.select(); input.dataset.def=''; } });
+    go.addEventListener('click',function(){
+      var text=(input.value||'').trim(); if(!text) return;
+      var lang=curLang();
+      var src='app.html?q='+encodeURIComponent(text)+(lang==='en'?'&lang=en':'');
+      var ifr=document.querySelector('iframe[title="ContainerLoad"]'); if(ifr) ifr.setAttribute('src',src);
+      var demo=document.getElementById('demo'); if(demo){ var y=demo.getBoundingClientRect().top+window.pageYOffset-70; window.scrollTo({top:Math.max(0,y),behavior:'smooth'}); }
+    });
+    input.value='20 Europaletten 120x80x110, stapelbar'; input.dataset.def='1';
+  })();
+    setLang(initial);
+})();
+</script>
+<!-- Besucherzaehler: GoatCounter (kostenlos, ohne Cookies, DSGVO-freundlich) -->
+<!-- Ersetze containerload durch deinen Code von goatcounter.com (z.B. containerload) -->
+<script data-goatcounter="https://containerload.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

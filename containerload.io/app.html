@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>ContainerLoad — Rechner</title>
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://containerload.io/" />
+<meta property="og:site_name" content="ContainerLoad" />
+<meta property="og:image" content="https://containerload.io/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="ContainerLoad — Jede Ladung, im richtigen Container." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="ContainerLoad — Beladung in Sekunden" />
+<meta name="twitter:description" content="Passt deine Ladung rein? In welchen Container? ContainerLoad rechnet es live in 3D." />
+<meta name="twitter:image" content="https://containerload.io/og.png" />
+<meta name="theme-color" content="#070a0f" />
+<meta name="description" content="Premium 3D Container-Ladungsrechner: Auslastung, Stapelung & Container-Empfehlung in Sekunden." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 rx=%225%22 fill=%22%232f9bff%22/><rect x=%223%22 y=%227%22 width=%2218%22 height=%2211%22 rx=%221.5%22 fill=%22none%22 stroke=%22%2304101f%22 stroke-width=%222%22/><rect x=%225%22 y=%229.3%22 width=%222.3%22 height=%226.4%22 rx=%220.5%22 fill=%22%2304101f%22/><rect x=%227.9%22 y=%229.3%22 width=%222.3%22 height=%226.4%22 rx=%220.5%22 fill=%22%2304101f%22/><rect x=%2210.8%22 y=%229.3%22 width=%222.3%22 height=%226.4%22 rx=%220.5%22 fill=%22%2304101f%22/></svg>" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" crossorigin></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>/* qrcode-generator (vendored, MIT, K. Arase) */
+var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T),T.exports}catch(N){throw T=0,N}};var vr=or((W,V)=>{var $=(function(){var L=function(x,w){var g=236,l=17,n=x,s=N[w],t=null,r=0,h=null,i=[],v={},_=function(a,f){r=n*4+17,t=(function(e){for(var u=new Array(e),o=0;o<e;o+=1){u[o]=new Array(e);for(var d=0;d<e;d+=1)u[o][d]=null}return u})(r),B(0,0),B(r-7,0),B(0,r-7),E(),C(),m(a,f),n>=7&&O(a),h==null&&(h=ir(n,s,i)),U(h,f)},B=function(a,f){for(var e=-1;e<=7;e+=1)if(!(a+e<=-1||r<=a+e))for(var u=-1;u<=7;u+=1)f+u<=-1||r<=f+u||(0<=e&&e<=6&&(u==0||u==6)||0<=u&&u<=6&&(e==0||e==6)||2<=e&&e<=4&&2<=u&&u<=4?t[a+e][f+u]=!0:t[a+e][f+u]=!1)},y=function(){for(var a=0,f=0,e=0;e<8;e+=1){_(!0,e);var u=P.getLostPoint(v);(e==0||a>u)&&(a=u,f=e)}return f},C=function(){for(var a=8;a<r-8;a+=1)t[a][6]==null&&(t[a][6]=a%2==0);for(var f=8;f<r-8;f+=1)t[6][f]==null&&(t[6][f]=f%2==0)},E=function(){for(var a=P.getPatternPosition(n),f=0;f<a.length;f+=1)for(var e=0;e<a.length;e+=1){var u=a[f],o=a[e];if(t[u][o]==null)for(var d=-2;d<=2;d+=1)for(var c=-2;c<=2;c+=1)d==-2||d==2||c==-2||c==2||d==0&&c==0?t[u+d][o+c]=!0:t[u+d][o+c]=!1}},O=function(a){for(var f=P.getBCHTypeNumber(n),e=0;e<18;e+=1){var u=!a&&(f>>e&1)==1;t[Math.floor(e/3)][e%3+r-8-3]=u}for(var e=0;e<18;e+=1){var u=!a&&(f>>e&1)==1;t[e%3+r-8-3][Math.floor(e/3)]=u}},m=function(a,f){for(var e=s<<3|f,u=P.getBCHTypeInfo(e),o=0;o<15;o+=1){var d=!a&&(u>>o&1)==1;o<6?t[o][8]=d:o<8?t[o+1][8]=d:t[r-15+o][8]=d}for(var o=0;o<15;o+=1){var d=!a&&(u>>o&1)==1;o<8?t[8][r-o-1]=d:o<9?t[8][15-o-1+1]=d:t[8][15-o-1]=d}t[r-8][8]=!a},U=function(a,f){for(var e=-1,u=r-1,o=7,d=0,c=P.getMaskFunction(f),p=r-1;p>0;p-=2)for(p==6&&(p-=1);;){for(var b=0;b<2;b+=1)if(t[u][p-b]==null){var D=!1;d<a.length&&(D=(a[d]>>>o&1)==1);var A=c(u,p-b);A&&(D=!D),t[u][p-b]=D,o-=1,o==-1&&(d+=1,o=7)}if(u+=e,u<0||r<=u){u-=e,e=-e;break}}},H=function(a,f){for(var e=0,u=0,o=0,d=new Array(f.length),c=new Array(f.length),p=0;p<f.length;p+=1){var b=f[p].dataCount,D=f[p].totalCount-b;u=Math.max(u,b),o=Math.max(o,D),d[p]=new Array(b);for(var A=0;A<d[p].length;A+=1)d[p][A]=255&a.getBuffer()[A+e];e+=b;var R=P.getErrorCorrectPolynomial(D),I=K(d[p],R.getLength()-1),S=I.mod(R);c[p]=new Array(R.getLength()-1);for(var A=0;A<c[p].length;A+=1){var X=A+S.getLength()-c[p].length;c[p][A]=X>=0?S.getAt(X):0}}for(var Z=0,A=0;A<f.length;A+=1)Z+=f[A].totalCount;for(var J=new Array(Z),Q=0,A=0;A<u;A+=1)for(var p=0;p<f.length;p+=1)A<d[p].length&&(J[Q]=d[p][A],Q+=1);for(var A=0;A<o;A+=1)for(var p=0;p<f.length;p+=1)A<c[p].length&&(J[Q]=c[p][A],Q+=1);return J},ir=function(a,f,e){for(var u=Y.getRSBlocks(a,f),o=G(),d=0;d<e.length;d+=1){var c=e[d];o.put(c.getMode(),4),o.put(c.getLength(),P.getLengthInBits(c.getMode(),a)),c.write(o)}for(var p=0,d=0;d<u.length;d+=1)p+=u[d].dataCount;if(o.getLengthInBits()>p*8)throw"code length overflow. ("+o.getLengthInBits()+">"+p*8+")";for(o.getLengthInBits()+4<=p*8&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=p*8||(o.put(g,8),o.getLengthInBits()>=p*8));)o.put(l,8);return H(o,u)};v.addData=function(a,f){f=f||"Byte";var e=null;switch(f){case"Numeric":e=q(a);break;case"Alphanumeric":e=z(a);break;case"Byte":e=rr(a);break;case"Kanji":e=tr(a);break;default:throw"mode:"+f}i.push(e),h=null},v.isDark=function(a,f){if(a<0||r<=a||f<0||r<=f)throw a+","+f;return t[a][f]},v.getModuleCount=function(){return r},v.make=function(){if(n<1){for(var a=1;a<40;a++){for(var f=Y.getRSBlocks(a,s),e=G(),u=0;u<i.length;u++){var o=i[u];e.put(o.getMode(),4),e.put(o.getLength(),P.getLengthInBits(o.getMode(),a)),o.write(e)}for(var d=0,u=0;u<f.length;u++)d+=f[u].dataCount;if(e.getLengthInBits()<=d*8)break}n=a}_(!1,y())},v.createTableTag=function(a,f){a=a||2,f=typeof f>"u"?a*4:f;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+f+"px;",e+='">',e+="<tbody>";for(var u=0;u<v.getModuleCount();u+=1){e+="<tr>";for(var o=0;o<v.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+a+"px;",e+=" height: "+a+"px;",e+=" background-color: ",e+=v.isDark(u,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>",e},v.createSvgTag=function(a,f,e,u){var o={};typeof arguments[0]=="object"&&(o=arguments[0],a=o.cellSize,f=o.margin,e=o.alt,u=o.title),a=a||2,f=typeof f>"u"?a*4:f,e=typeof e=="string"?{text:e}:e||{},e.text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,u=typeof u=="string"?{text:u}:u||{},u.text=u.text||null,u.id=u.text?u.id||"qrcode-title":null;var d=v.getModuleCount()*a+f*2,c,p,b,D,A="",R;for(R="l"+a+",0 0,"+a+" -"+a+",0 0,-"+a+"z ",A+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',A+=o.scalable?"":' width="'+d+'px" height="'+d+'px"',A+=' viewBox="0 0 '+d+" "+d+'" ',A+=' preserveAspectRatio="xMinYMin meet"',A+=u.text||e.text?' role="img" aria-labelledby="'+F([u.id,e.id].join(" ").trim())+'"':"",A+=">",A+=u.text?'<title id="'+F(u.id)+'">'+F(u.text)+"</title>":"",A+=e.text?'<description id="'+F(e.id)+'">'+F(e.text)+"</description>":"",A+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',A+='<path d="',b=0;b<v.getModuleCount();b+=1)for(D=b*a+f,c=0;c<v.getModuleCount();c+=1)v.isDark(b,c)&&(p=c*a+f,A+="M"+p+","+D+R);return A+='" stroke="transparent" fill="black"/>',A+="</svg>",A},v.createDataURL=function(a,f){a=a||2,f=typeof f>"u"?a*4:f;var e=v.getModuleCount()*a+f*2,u=f,o=e-f;return fr(e,e,function(d,c){if(u<=d&&d<o&&u<=c&&c<o){var p=Math.floor((d-u)/a),b=Math.floor((c-u)/a);return v.isDark(b,p)?0:1}else return 1})},v.createImgTag=function(a,f,e){a=a||2,f=typeof f>"u"?a*4:f;var u=v.getModuleCount()*a+f*2,o="";return o+="<img",o+=' src="',o+=v.createDataURL(a,f),o+='"',o+=' width="',o+=u,o+='"',o+=' height="',o+=u,o+='"',e&&(o+=' alt="',o+=F(e),o+='"'),o+="/>",o};var F=function(a){for(var f="",e=0;e<a.length;e+=1){var u=a.charAt(e);switch(u){case"<":f+="&lt;";break;case">":f+="&gt;";break;case"&":f+="&amp;";break;case'"':f+="&quot;";break;default:f+=u;break}}return f},ur=function(a){var f=1;a=typeof a>"u"?f*2:a;var e=v.getModuleCount()*f+a*2,u=a,o=e-a,d,c,p,b,D,A={"\u2588\u2588":"\u2588","\u2588 ":"\u2580"," \u2588":"\u2584","  ":" "},R={"\u2588\u2588":"\u2580","\u2588 ":"\u2580"," \u2588":" ","  ":" "},I="";for(d=0;d<e;d+=2){for(p=Math.floor((d-u)/f),b=Math.floor((d+1-u)/f),c=0;c<e;c+=1)D="\u2588",u<=c&&c<o&&u<=d&&d<o&&v.isDark(p,Math.floor((c-u)/f))&&(D=" "),u<=c&&c<o&&u<=d+1&&d+1<o&&v.isDark(b,Math.floor((c-u)/f))?D+=" ":D+="\u2588",I+=a<1&&d+1>=o?R[D]:A[D];I+=`
+`}return e%2&&a>0?I.substring(0,I.length-e-1)+Array(e+1).join("\u2580"):I.substring(0,I.length-1)};return v.createASCII=function(a,f){if(a=a||1,a<2)return ur(f);a-=1,f=typeof f>"u"?a*2:f;var e=v.getModuleCount()*a+f*2,u=f,o=e-f,d,c,p,b,D=Array(a+1).join("\u2588\u2588"),A=Array(a+1).join("  "),R="",I="";for(d=0;d<e;d+=1){for(p=Math.floor((d-u)/a),I="",c=0;c<e;c+=1)b=1,u<=c&&c<o&&u<=d&&d<o&&v.isDark(p,Math.floor((c-u)/a))&&(b=0),I+=b?D:A;for(p=0;p<a;p+=1)R+=I+`
+`}return R.substring(0,R.length-1)},v.renderTo2dContext=function(a,f){f=f||2;for(var e=v.getModuleCount(),u=0;u<e;u++)for(var o=0;o<e;o++)a.fillStyle=v.isDark(u,o)?"black":"white",a.fillRect(o*f,u*f,f,f)},v};L.stringToBytesFuncs={default:function(x){for(var w=[],g=0;g<x.length;g+=1){var l=x.charCodeAt(g);w.push(l&255)}return w}},L.stringToBytes=L.stringToBytesFuncs.default,L.createStringToBytes=function(x,w){var g=(function(){for(var n=nr(x),s=function(){var C=n.read();if(C==-1)throw"eof";return C},t=0,r={};;){var h=n.read();if(h==-1)break;var i=s(),v=s(),_=s(),B=String.fromCharCode(h<<8|i),y=v<<8|_;r[B]=y,t+=1}if(t!=w)throw t+" != "+w;return r})(),l=63;return function(n){for(var s=[],t=0;t<n.length;t+=1){var r=n.charCodeAt(t);if(r<128)s.push(r);else{var h=g[n.charAt(t)];typeof h=="number"?(h&255)==h?s.push(h):(s.push(h>>>8),s.push(h&255)):s.push(l)}}return s}};var T={MODE_NUMBER:1,MODE_ALPHA_NUM:2,MODE_8BIT_BYTE:4,MODE_KANJI:8},N={L:1,M:0,Q:3,H:2},k={PATTERN000:0,PATTERN001:1,PATTERN010:2,PATTERN011:3,PATTERN100:4,PATTERN101:5,PATTERN110:6,PATTERN111:7},P=(function(){var x=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],w=1335,g=7973,l=21522,n={},s=function(t){for(var r=0;t!=0;)r+=1,t>>>=1;return r};return n.getBCHTypeInfo=function(t){for(var r=t<<10;s(r)-s(w)>=0;)r^=w<<s(r)-s(w);return(t<<10|r)^l},n.getBCHTypeNumber=function(t){for(var r=t<<12;s(r)-s(g)>=0;)r^=g<<s(r)-s(g);return t<<12|r},n.getPatternPosition=function(t){return x[t-1]},n.getMaskFunction=function(t){switch(t){case k.PATTERN000:return function(r,h){return(r+h)%2==0};case k.PATTERN001:return function(r,h){return r%2==0};case k.PATTERN010:return function(r,h){return h%3==0};case k.PATTERN011:return function(r,h){return(r+h)%3==0};case k.PATTERN100:return function(r,h){return(Math.floor(r/2)+Math.floor(h/3))%2==0};case k.PATTERN101:return function(r,h){return r*h%2+r*h%3==0};case k.PATTERN110:return function(r,h){return(r*h%2+r*h%3)%2==0};case k.PATTERN111:return function(r,h){return(r*h%3+(r+h)%2)%2==0};default:throw"bad maskPattern:"+t}},n.getErrorCorrectPolynomial=function(t){for(var r=K([1],0),h=0;h<t;h+=1)r=r.multiply(K([1,M.gexp(h)],0));return r},n.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case T.MODE_NUMBER:return 10;case T.MODE_ALPHA_NUM:return 9;case T.MODE_8BIT_BYTE:return 8;case T.MODE_KANJI:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case T.MODE_NUMBER:return 12;case T.MODE_ALPHA_NUM:return 11;case T.MODE_8BIT_BYTE:return 16;case T.MODE_KANJI:return 10;default:throw"mode:"+t}else if(r<41)switch(t){case T.MODE_NUMBER:return 14;case T.MODE_ALPHA_NUM:return 13;case T.MODE_8BIT_BYTE:return 16;case T.MODE_KANJI:return 12;default:throw"mode:"+t}else throw"type:"+r},n.getLostPoint=function(t){for(var r=t.getModuleCount(),h=0,i=0;i<r;i+=1)for(var v=0;v<r;v+=1){for(var _=0,B=t.isDark(i,v),y=-1;y<=1;y+=1)if(!(i+y<0||r<=i+y))for(var C=-1;C<=1;C+=1)v+C<0||r<=v+C||y==0&&C==0||B==t.isDark(i+y,v+C)&&(_+=1);_>5&&(h+=3+_-5)}for(var i=0;i<r-1;i+=1)for(var v=0;v<r-1;v+=1){var E=0;t.isDark(i,v)&&(E+=1),t.isDark(i+1,v)&&(E+=1),t.isDark(i,v+1)&&(E+=1),t.isDark(i+1,v+1)&&(E+=1),(E==0||E==4)&&(h+=3)}for(var i=0;i<r;i+=1)for(var v=0;v<r-6;v+=1)t.isDark(i,v)&&!t.isDark(i,v+1)&&t.isDark(i,v+2)&&t.isDark(i,v+3)&&t.isDark(i,v+4)&&!t.isDark(i,v+5)&&t.isDark(i,v+6)&&(h+=40);for(var v=0;v<r;v+=1)for(var i=0;i<r-6;i+=1)t.isDark(i,v)&&!t.isDark(i+1,v)&&t.isDark(i+2,v)&&t.isDark(i+3,v)&&t.isDark(i+4,v)&&!t.isDark(i+5,v)&&t.isDark(i+6,v)&&(h+=40);for(var O=0,v=0;v<r;v+=1)for(var i=0;i<r;i+=1)t.isDark(i,v)&&(O+=1);var m=Math.abs(100*O/r/r-50)/5;return h+=m*10,h},n})(),M=(function(){for(var x=new Array(256),w=new Array(256),g=0;g<8;g+=1)x[g]=1<<g;for(var g=8;g<256;g+=1)x[g]=x[g-4]^x[g-5]^x[g-6]^x[g-8];for(var g=0;g<255;g+=1)w[x[g]]=g;var l={};return l.glog=function(n){if(n<1)throw"glog("+n+")";return w[n]},l.gexp=function(n){for(;n<0;)n+=255;for(;n>=256;)n-=255;return x[n]},l})();function K(x,w){if(typeof x.length>"u")throw x.length+"/"+w;var g=(function(){for(var n=0;n<x.length&&x[n]==0;)n+=1;for(var s=new Array(x.length-n+w),t=0;t<x.length-n;t+=1)s[t]=x[t+n];return s})(),l={};return l.getAt=function(n){return g[n]},l.getLength=function(){return g.length},l.multiply=function(n){for(var s=new Array(l.getLength()+n.getLength()-1),t=0;t<l.getLength();t+=1)for(var r=0;r<n.getLength();r+=1)s[t+r]^=M.gexp(M.glog(l.getAt(t))+M.glog(n.getAt(r)));return K(s,0)},l.mod=function(n){if(l.getLength()-n.getLength()<0)return l;for(var s=M.glog(l.getAt(0))-M.glog(n.getAt(0)),t=new Array(l.getLength()),r=0;r<l.getLength();r+=1)t[r]=l.getAt(r);for(var r=0;r<n.getLength();r+=1)t[r]^=M.gexp(M.glog(n.getAt(r))+s);return K(t,0).mod(n)},l}var Y=(function(){var x=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],w=function(n,s){var t={};return t.totalCount=n,t.dataCount=s,t},g={},l=function(n,s){switch(s){case N.L:return x[(n-1)*4+0];case N.M:return x[(n-1)*4+1];case N.Q:return x[(n-1)*4+2];case N.H:return x[(n-1)*4+3];default:return}};return g.getRSBlocks=function(n,s){var t=l(n,s);if(typeof t>"u")throw"bad rs block @ typeNumber:"+n+"/errorCorrectionLevel:"+s;for(var r=t.length/3,h=[],i=0;i<r;i+=1)for(var v=t[i*3+0],_=t[i*3+1],B=t[i*3+2],y=0;y<v;y+=1)h.push(w(_,B));return h},g})(),G=function(){var x=[],w=0,g={};return g.getBuffer=function(){return x},g.getAt=function(l){var n=Math.floor(l/8);return(x[n]>>>7-l%8&1)==1},g.put=function(l,n){for(var s=0;s<n;s+=1)g.putBit((l>>>n-s-1&1)==1)},g.getLengthInBits=function(){return w},g.putBit=function(l){var n=Math.floor(w/8);x.length<=n&&x.push(0),l&&(x[n]|=128>>>w%8),w+=1},g},q=function(x){var w=T.MODE_NUMBER,g=x,l={};l.getMode=function(){return w},l.getLength=function(t){return g.length},l.write=function(t){for(var r=g,h=0;h+2<r.length;)t.put(n(r.substring(h,h+3)),10),h+=3;h<r.length&&(r.length-h==1?t.put(n(r.substring(h,h+1)),4):r.length-h==2&&t.put(n(r.substring(h,h+2)),7))};var n=function(t){for(var r=0,h=0;h<t.length;h+=1)r=r*10+s(t.charAt(h));return r},s=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-48;throw"illegal char :"+t};return l},z=function(x){var w=T.MODE_ALPHA_NUM,g=x,l={};l.getMode=function(){return w},l.getLength=function(s){return g.length},l.write=function(s){for(var t=g,r=0;r+1<t.length;)s.put(n(t.charAt(r))*45+n(t.charAt(r+1)),11),r+=2;r<t.length&&s.put(n(t.charAt(r)),6)};var n=function(s){if("0"<=s&&s<="9")return s.charCodeAt(0)-48;if("A"<=s&&s<="Z")return s.charCodeAt(0)-65+10;switch(s){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+s}};return l},rr=function(x){var w=T.MODE_8BIT_BYTE,g=x,l=L.stringToBytes(x),n={};return n.getMode=function(){return w},n.getLength=function(s){return l.length},n.write=function(s){for(var t=0;t<l.length;t+=1)s.put(l[t],8)},n},tr=function(x){var w=T.MODE_KANJI,g=x,l=L.stringToBytesFuncs.SJIS;if(!l)throw"sjis not supported.";(function(t,r){var h=l(t);if(h.length!=2||(h[0]<<8|h[1])!=r)throw"sjis not supported."})("\u53CB",38726);var n=l(x),s={};return s.getMode=function(){return w},s.getLength=function(t){return~~(n.length/2)},s.write=function(t){for(var r=n,h=0;h+1<r.length;){var i=(255&r[h])<<8|255&r[h+1];if(33088<=i&&i<=40956)i-=33088;else if(57408<=i&&i<=60351)i-=49472;else throw"illegal char at "+(h+1)+"/"+i;i=(i>>>8&255)*192+(i&255),t.put(i,13),h+=2}if(h<r.length)throw"illegal char at "+(h+1)},s},j=function(){var x=[],w={};return w.writeByte=function(g){x.push(g&255)},w.writeShort=function(g){w.writeByte(g),w.writeByte(g>>>8)},w.writeBytes=function(g,l,n){l=l||0,n=n||g.length;for(var s=0;s<n;s+=1)w.writeByte(g[s+l])},w.writeString=function(g){for(var l=0;l<g.length;l+=1)w.writeByte(g.charCodeAt(l))},w.toByteArray=function(){return x},w.toString=function(){var g="";g+="[";for(var l=0;l<x.length;l+=1)l>0&&(g+=","),g+=x[l];return g+="]",g},w},er=function(){var x=0,w=0,g=0,l="",n={},s=function(r){l+=String.fromCharCode(t(r&63))},t=function(r){if(!(r<0)){if(r<26)return 65+r;if(r<52)return 97+(r-26);if(r<62)return 48+(r-52);if(r==62)return 43;if(r==63)return 47}throw"n:"+r};return n.writeByte=function(r){for(x=x<<8|r&255,w+=8,g+=1;w>=6;)s(x>>>w-6),w-=6},n.flush=function(){if(w>0&&(s(x<<6-w),x=0,w=0),g%3!=0)for(var r=3-g%3,h=0;h<r;h+=1)l+="="},n.toString=function(){return l},n},nr=function(x){var w=x,g=0,l=0,n=0,s={};s.read=function(){for(;n<8;){if(g>=w.length){if(n==0)return-1;throw"unexpected end of file./"+n}var r=w.charAt(g);if(g+=1,r=="=")return n=0,-1;if(r.match(/^\s$/))continue;l=l<<6|t(r.charCodeAt(0)),n+=6}var h=l>>>n-8&255;return n-=8,h};var t=function(r){if(65<=r&&r<=90)return r-65;if(97<=r&&r<=122)return r-97+26;if(48<=r&&r<=57)return r-48+52;if(r==43)return 62;if(r==47)return 63;throw"c:"+r};return s},ar=function(x,w){var g=x,l=w,n=new Array(x*w),s={};s.setPixel=function(i,v,_){n[v*g+i]=_},s.write=function(i){i.writeString("GIF87a"),i.writeShort(g),i.writeShort(l),i.writeByte(128),i.writeByte(0),i.writeByte(0),i.writeByte(0),i.writeByte(0),i.writeByte(0),i.writeByte(255),i.writeByte(255),i.writeByte(255),i.writeString(","),i.writeShort(0),i.writeShort(0),i.writeShort(g),i.writeShort(l),i.writeByte(0);var v=2,_=r(v);i.writeByte(v);for(var B=0;_.length-B>255;)i.writeByte(255),i.writeBytes(_,B,255),B+=255;i.writeByte(_.length-B),i.writeBytes(_,B,_.length-B),i.writeByte(0),i.writeString(";")};var t=function(i){var v=i,_=0,B=0,y={};return y.write=function(C,E){if(C>>>E)throw"length over";for(;_+E>=8;)v.writeByte(255&(C<<_|B)),E-=8-_,C>>>=8-_,B=0,_=0;B=C<<_|B,_=_+E},y.flush=function(){_>0&&v.writeByte(B)},y},r=function(i){for(var v=1<<i,_=(1<<i)+1,B=i+1,y=h(),C=0;C<v;C+=1)y.add(String.fromCharCode(C));y.add(String.fromCharCode(v)),y.add(String.fromCharCode(_));var E=j(),O=t(E);O.write(v,B);var m=0,U=String.fromCharCode(n[m]);for(m+=1;m<n.length;){var H=String.fromCharCode(n[m]);m+=1,y.contains(U+H)?U=U+H:(O.write(y.indexOf(U),B),y.size()<4095&&(y.size()==1<<B&&(B+=1),y.add(U+H)),U=H)}return O.write(y.indexOf(U),B),O.write(_,B),O.flush(),E.toByteArray()},h=function(){var i={},v=0,_={};return _.add=function(B){if(_.contains(B))throw"dup key:"+B;i[B]=v,v+=1},_.size=function(){return v},_.indexOf=function(B){return i[B]},_.contains=function(B){return typeof i[B]<"u"},_};return s},fr=function(x,w,g){for(var l=ar(x,w),n=0;n<w;n+=1)for(var s=0;s<x;s+=1)l.setPixel(s,n,g(s,n));var t=j();l.write(t);for(var r=er(),h=t.toByteArray(),i=0;i<h.length;i+=1)r.writeByte(h[i]);return r.flush(),"data:image/gif;base64,"+r};return L})();(function(){$.stringToBytesFuncs["UTF-8"]=function(L){function T(N){for(var k=[],P=0;P<N.length;P++){var M=N.charCodeAt(P);M<128?k.push(M):M<2048?k.push(192|M>>6,128|M&63):M<55296||M>=57344?k.push(224|M>>12,128|M>>6&63,128|M&63):(P++,M=65536+((M&1023)<<10|N.charCodeAt(P)&1023),k.push(240|M>>18,128|M>>12&63,128|M>>6&63,128|M&63))}return k}return T(L)}})();(function(L){typeof define=="function"&&define.amd?define([],L):typeof W=="object"&&(V.exports=L())})(function(){return $})});return vr();})();
+</script>
+<style>
+  html, body { margin: 0; padding: 0; background: #070a0f; color: #eef2f7; }
+  #root { min-height: 100vh; }
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+  ::-webkit-scrollbar { width: 9px; height: 9px; }
+  ::-webkit-scrollbar-track { background: #080c12; }
+  ::-webkit-scrollbar-thumb { background: #243042; border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: #34435a; }
+  #boot { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+          font-family: ui-monospace, monospace; color: #4a5564; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+  <div id="root"><div id="boot">ContainerLoad lädt…</div></div>
+  <script>
+  (function () {
+    function start() {
+      if (!window.React || !window.ReactDOM || !window.THREE) { setTimeout(start, 40); return; }
+      try {
+(() => {
+  // entry2.jsx
+  var { useState, useRef, useEffect } = React;
+  var THREE = window.THREE;
+  var PRESETS = {
+    "20' GP": { l: 590, w: 235, h: 239, payload: 28200, door: { w: 234, h: 228 } },
+    "20' HC": { l: 590, w: 235, h: 270, payload: 28150, door: { w: 234, h: 258 } },
+    "40' GP": { l: 1203, w: 235, h: 239, payload: 26600, door: { w: 234, h: 228 } },
+    "40' HC": { l: 1203, w: 235, h: 270, payload: 26580, door: { w: 234, h: 258 } },
+    "45' HC": { l: 1355, w: 235, h: 270, payload: 27600, door: { w: 234, h: 258 } }
+  };
+  var META = {
+    "20' GP": "General Purpose",
+    "20' HC": "High Cube",
+    "40' GP": "General Purpose",
+    "40' HC": "High Cube",
+    "45' HC": "High Cube \xB7 Pallet-Wide"
+  };
+  var TYPE_COLORS = ["#2f9bff", "#38e0c8", "#ffb454", "#c084fc", "#ff7a90", "#4dd0e1", "#a3e635", "#f472b6"];
+  var C = {
+    text: "#eef2f7",
+    dim: "#9aa7b8",
+    faint: "#67748a",
+    accent: "#2f9bff",
+    teal: "#38e0c8",
+    good: "#37d39f",
+    warn: "#ffb454",
+    bad: "#ff5d6c",
+    field: "#141d2b",
+    fieldBorder: "#2a3850"
+  };
+  var SANS = "'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif";
+  var MONO = "'JetBrains Mono', ui-monospace, 'SF Mono', monospace";
+  var num = (v, d = 0) => Number.isFinite(+v) && v !== "" ? +v : d;
+  var fitsThroughDoor = (it, door) => num(it.h) <= door.h && Math.min(num(it.l), num(it.w)) <= door.w;
+  var _id = 0;
+  var uid = () => `c${_id++}`;
+  var PALLET_PRESETS = [
+    { re: /euro\s*-?\s*palette|eur\s*-?\s*palette|europalette|epal/i, l: 120, w: 80 },
+    { re: /industrie\s*-?\s*palette|industrial\s*pallet|industriepalette/i, l: 120, w: 100 }
+  ];
+  function parseCargoText(text) {
+    if (!text) return [];
+    const out = [];
+    const toNum = (x) => parseFloat(String(x).replace(",", "."));
+    const lines = text.split(/[\n;]+/).map((x) => x.trim()).filter(Boolean);
+    for (const line of lines) {
+      const low = line.toLowerCase();
+      let l = null, w = null, h = null;
+      const dim = line.match(/(\d+(?:[.,]\d+)?)\s*(mm|cm|m)?\s*[x×\*\/]\s*(\d+(?:[.,]\d+)?)\s*(mm|cm|m)?\s*[x×\*\/]\s*(\d+(?:[.,]\d+)?)\s*(mm|cm|m)?/i);
+      if (dim) {
+        l = toNum(dim[1]);
+        w = toNum(dim[3]);
+        h = toNum(dim[5]);
+        const u = (dim[6] || dim[4] || dim[2] || "").toLowerCase();
+        if (u === "m") {
+          l *= 100;
+          w *= 100;
+          h *= 100;
+        } else if (u === "mm") {
+          l /= 10;
+          w /= 10;
+          h /= 10;
+        }
+      }
+      let pal = null;
+      for (const p of PALLET_PRESETS) {
+        if (p.re.test(line)) {
+          pal = p;
+          break;
+        }
+      }
+      if (!dim && !pal) continue;
+      if (!dim && pal) {
+        l = pal.l;
+        w = pal.w;
+        h = 110;
+      }
+      let qty = 1;
+      const qm = line.match(/(\d+)\s*(?:x\b|×|stk\.?|stück|paletten?|pallets?|kartons?|cartons?|colli|packst(?:ü|ue)cke?|boxes?|pcs|units?)/i);
+      if (qm) qty = parseInt(qm[1], 10);
+      else {
+        const lead = line.match(/^\s*(\d+)\b/);
+        if (lead && (!dim || line.indexOf(dim[0]) > 0)) qty = parseInt(lead[1], 10);
+      }
+      if (!Number.isFinite(qty) || qty < 1) qty = 1;
+      let weight = 0;
+      const wm = line.match(/(\d+(?:[.,]\d+)?)\s*(kg|kilo|tonnen?|to\b|t\b)/i);
+      if (wm) {
+        weight = toNum(wm[1]);
+        if (/^(t|to|tonn)/i.test(wm[2])) weight *= 1e3;
+      }
+      let stackable = true;
+      if (/nicht\s*stapel|non[-\s]?stack|not\s*stack|keine?\s*stapel/i.test(low)) stackable = false;
+      let rotatable = true;
+      if (/nicht\s*drehbar|not\s*rotat|no\s*rotat/i.test(low)) rotatable = false;
+      let name = line.replace(/(\d+(?:[.,]\d+)?)\s*(mm|cm|m)?\s*[x×\*\/]\s*(\d+(?:[.,]\d+)?)\s*(mm|cm|m)?\s*[x×\*\/]\s*(\d+(?:[.,]\d+)?)\s*(mm|cm|m)?/i, "").replace(/(\d+(?:[.,]\d+)?)\s*(kg|kilo|tonnen?|to\b|t\b)/i, "").replace(/(\d+)\s*(x\b|×|stk\.?|stück|paletten?|pallets?|kartons?|cartons?|colli|packst(?:ü|ue)cke?|boxes?|pcs|units?)/i, "").replace(/nicht\s*stapelbar|stapelbar|non[-\s]?stackable|stackable|nicht\s*drehbar/ig, "").replace(/^[\s,\-–|:]+|[\s,\-–|:]+$/g, "").replace(/^\s*\d+\s+/, "").replace(/\s+/g, " ").trim();
+      if (!name) name = pal ? pal.w === 80 ? "Europalette" : "Palette" : "Position";
+      name = name.charAt(0).toUpperCase() + name.slice(1);
+      if (name.length > 22) name = name.slice(0, 22);
+      out.push({ qty, l: Math.max(1, Math.round(l)), w: Math.max(1, Math.round(w)), h: Math.max(1, Math.round(h)), weight: Math.max(0, Math.round(weight)), stackable, rotatable, name });
+    }
+    return out;
+  }
+  var hexA = (hex, a) => {
+    const n = parseInt(hex.slice(1), 16);
+    return `rgba(${n >> 16 & 255}, ${n >> 8 & 255}, ${n & 255}, ${a})`;
+  };
+  function makeFloorPacker(l, w, rotatable) {
+    const memo = /* @__PURE__ */ new Map();
+    const grid = (a, b, pl, pw) => {
+      const nx = Math.floor((a + 1e-6) / pl), nz = Math.floor((b + 1e-6) / pw);
+      const r = [];
+      for (let i = 0; i < nx; i++) for (let j = 0; j < nz; j++) r.push({ x: i * pl, z: j * pw, dx: pl, dz: pw });
+      return r;
+    };
+    const cands = (D) => {
+      const s = /* @__PURE__ */ new Set();
+      for (let k = l; k < D; k += l) s.add(k);
+      if (rotatable) for (let k = w; k < D; k += w) s.add(k);
+      return [...s].filter((v) => v <= D - Math.min(l, w) + 1e-6);
+    };
+    function solve(FL, FW) {
+      const m = Math.min(l, w);
+      if (FL < m - 1e-6 || FW < m - 1e-6) return { count: 0, rects: [] };
+      const key = FL.toFixed(1) + "x" + FW.toFixed(1);
+      if (memo.has(key)) return memo.get(key);
+      let best = { count: 0, rects: [] };
+      const grids = rotatable ? [grid(FL, FW, l, w), grid(FL, FW, w, l)] : [grid(FL, FW, l, w)];
+      for (const g of grids) if (g.length > best.count) best = { count: g.length, rects: g };
+      if (best.count < 500) {
+        for (const s of cands(FL)) {
+          const A = solve(s, FW), B = solve(FL - s, FW);
+          if (A.count + B.count > best.count) best = { count: A.count + B.count, rects: [...A.rects, ...B.rects.map((r) => ({ ...r, x: r.x + s }))] };
+        }
+        for (const t of cands(FW)) {
+          const A = solve(FL, t), B = solve(FL, FW - t);
+          if (A.count + B.count > best.count) best = { count: A.count + B.count, rects: [...A.rects, ...B.rects.map((r) => ({ ...r, z: r.z + t }))] };
+        }
+      }
+      memo.set(key, best);
+      return best;
+    }
+    return solve;
+  }
+  function emsContains(A, B) {
+    return A.x <= B.x + 1e-6 && A.y <= B.y + 1e-6 && A.z <= B.z + 1e-6 && B.x + B.dx <= A.x + A.dx + 1e-6 && B.y + B.dy <= A.y + A.dy + 1e-6 && B.z + B.dz <= A.z + A.dz + 1e-6;
+  }
+  function emsPrune(list) {
+    const out = [];
+    for (let i = 0; i < list.length; i++) {
+      const a = list[i];
+      if (a.dx < 1e-6 || a.dy < 1e-6 || a.dz < 1e-6) continue;
+      let dom = false;
+      for (let j = 0; j < list.length; j++) {
+        if (i === j) continue;
+        const b = list[j];
+        if (b.dx < 1e-6) continue;
+        if (emsContains(b, a) && !(emsContains(a, b) && j < i)) {
+          dom = true;
+          break;
+        }
+      }
+      if (!dom) out.push(a);
+    }
+    return out;
+  }
+  function emsOverlap(S, B) {
+    return S.x < B.x + B.dx && B.x < S.x + S.dx && S.y < B.y + B.dy && B.y < S.y + S.dy && S.z < B.z + B.dz && B.z < S.z + S.dz;
+  }
+  function emsSplit(S, B) {
+    const r = [];
+    if (B.x > S.x) r.push({ x: S.x, y: S.y, z: S.z, dx: B.x - S.x, dy: S.dy, dz: S.dz });
+    if (B.x + B.dx < S.x + S.dx) r.push({ x: B.x + B.dx, y: S.y, z: S.z, dx: S.x + S.dx - B.x - B.dx, dy: S.dy, dz: S.dz });
+    if (B.y > S.y) r.push({ x: S.x, y: S.y, z: S.z, dx: S.dx, dy: B.y - S.y, dz: S.dz });
+    if (B.y + B.dy < S.y + S.dy) r.push({ x: S.x, y: B.y + B.dy, z: S.z, dx: S.dx, dy: S.y + S.dy - B.y - B.dy, dz: S.dz });
+    if (B.z > S.z) r.push({ x: S.x, y: S.y, z: S.z, dx: S.dx, dy: S.dy, dz: B.z - S.z });
+    if (B.z + B.dz < S.z + S.dz) r.push({ x: S.x, y: S.y, z: B.z + B.dz, dx: S.dx, dy: S.dy, dz: S.z + S.dz - B.z - B.dz });
+    return r;
+  }
+  function emsOris(it) {
+    const o = [], s = /* @__PURE__ */ new Set();
+    const add = (x, y, z) => {
+      const k = `${x},${y},${z}`;
+      if (!s.has(k)) {
+        s.add(k);
+        o.push([x, y, z]);
+      }
+    };
+    add(it.l, it.h, it.w);
+    if (it.rotatable) add(it.w, it.h, it.l);
+    return o;
+  }
+  function emsPackOnce(C2, units, order, pay, cap) {
+    let ems = [{ x: 0, y: 0, z: 0, dx: C2.l, dy: C2.h, dz: C2.w }];
+    const placed = [];
+    let weight = 0;
+    for (const u of units) {
+      if (weight + u.weight > pay + 1e-6) continue;
+      let best = null;
+      for (const S of ems) {
+        if (u.stackable === false && S.y > 1e-6) continue;
+        for (const [dx, dy, dz] of emsOris(u)) {
+          if (dx <= S.dx + 1e-6 && dy <= S.dy + 1e-6 && dz <= S.dz + 1e-6) {
+            const px = S.x, py = S.y, pz = S.z;
+            let score;
+            if (order === 0) score = py * 1e12 + px * 1e6 + pz;
+            else if (order === 1) score = py * 1e12 + pz * 1e6 + px;
+            else if (order === 2) score = px * 1e12 + py * 1e6 + pz;
+            else score = py * 1e12 + (px + pz) * 1e6 + Math.min(S.dx - dx, S.dz - dz);
+            if (!best || score < best.score) best = { px, py, pz, dx, dy, dz, score };
+          }
+        }
+      }
+      if (!best) continue;
+      const B = { x: best.px, y: best.py, z: best.pz, dx: best.dx, dy: best.dy, dz: best.dz };
+      placed.push({ ...B, ti: u.ti });
+      weight += u.weight;
+      const next = [];
+      for (const S of ems) {
+        if (emsOverlap(S, B)) {
+          for (const ns of emsSplit(S, B)) next.push(ns);
+        } else next.push(S);
+      }
+      ems = emsPrune(next);
+      if (ems.length > cap) ems = ems.slice(0, cap);
+    }
+    return { placed, weight };
+  }
+  function emsShuffle(a, seed) {
+    let s = seed >>> 0;
+    const r = () => {
+      s = s * 1103515245 + 12345 & 2147483647;
+      return s / 2147483647;
+    };
+    const x = a.slice();
+    for (let i = x.length - 1; i > 0; i--) {
+      const j = Math.floor(r() * (i + 1));
+      [x[i], x[j]] = [x[j], x[i]];
+    }
+    return x;
+  }
+  function emsSearch(C2, items, pay, restarts) {
+    let units = [];
+    items.forEach((t) => {
+      for (let i = 0; i < t.qty; i++) units.push(t);
+    });
+    if (units.length > 1500) units = units.slice(0, 1500);
+    const big = units.length;
+    const cap = big > 200 ? 1500 : 3e3;
+    const allSorts = [
+      (u) => u.slice().sort((a, b) => b.l * b.w * b.h - a.l * a.w * a.h),
+      (u) => u.slice().sort((a, b) => b.l * b.w - a.l * a.w),
+      (u) => u.slice().sort((a, b) => Math.max(b.l, b.w) - Math.max(a.l, a.w)),
+      (u) => u.slice().sort((a, b) => b.h - a.h)
+    ];
+    const sorts = big > 300 ? [allSorts[0], allSorts[3]] : allSorts;
+    const orderN = big > 300 ? 2 : 4;
+    const rs = big > 400 ? Math.min(restarts, 6) : restarts;
+    const vol = (p) => p.reduce((s, b) => s + b.dx * b.dy * b.dz, 0);
+    let best = { placed: [], weight: 0, n: -1, v: -1 };
+    const consider = (res) => {
+      const v = vol(res.placed);
+      if (res.placed.length > best.n || res.placed.length === best.n && v > best.v) best = { placed: res.placed, weight: res.weight, n: res.placed.length, v };
+    };
+    for (const sf of sorts) for (let o = 0; o < orderN; o++) consider(emsPackOnce(C2, sf(units), o, pay, cap));
+    for (let r = 0; r < rs; r++) {
+      const sh = emsShuffle(units, r * 2654435761 + 7);
+      for (let o = 0; o < orderN; o++) consider(emsPackOnce(C2, sh, o, pay, cap));
+    }
+    return best;
+  }
+  function packCargo(Ct, types, opts = {}) {
+    const CL = num(Ct.l), CW = num(Ct.w), CH = num(Ct.h);
+    const pay = num(Ct.payload) > 0 ? num(Ct.payload) : Infinity;
+    const totalBoxes = types.reduce((s, t) => s + Math.max(0, num(t.qty)), 0);
+    const empty = { placed: [], perType: types.map((t) => ({ loaded: 0, total: num(t.qty) })), contVol: CL * CW * CH / 1e6, usedVol: 0, util: 0, weight: 0, boxes: 0, totalBoxes, layers: 0, single: false, rotHint: false, rotHintAll: false };
+    if (CL <= 0 || CW <= 0 || CH <= 0) return empty;
+    const valid = types.map((t, ti) => ({ ti, rotatable: t.rotatable !== false, stackable: t.stackable !== false, l: num(t.l), w: num(t.w), h: num(t.h), qty: Math.max(0, Math.floor(num(t.qty))), weight: num(t.weight) })).filter((t) => t.l > 0 && t.w > 0 && t.h > 0 && t.qty > 0);
+    const loaded = types.map(() => 0);
+    let placed = [], weight = 0, layers = 0, single = false;
+    if (valid.length === 1) {
+      single = true;
+      const t = valid[0];
+      const maxLay = Math.floor((CH + 1e-6) / t.h);
+      layers = maxLay < 1 ? 0 : t.stackable ? maxLay : 1;
+      const fl = makeFloorPacker(t.l, t.w, t.rotatable)(CL, CW);
+      outer: for (let ly = 0; ly < layers; ly++) {
+        for (const r of fl.rects) {
+          if (loaded[t.ti] >= t.qty) break outer;
+          if (weight + t.weight > pay + 1e-6) break outer;
+          placed.push({ x: r.x, y: ly * t.h, z: r.z, dx: r.dx, dy: t.h, dz: r.dz, ti: t.ti });
+          loaded[t.ti]++;
+          weight += t.weight;
+        }
+      }
+    } else if (valid.length > 1) {
+      const totalU = valid.reduce((s, t) => s + t.qty, 0);
+      const restarts = opts.quick ? 0 : opts.intensive ? totalU <= 60 ? 280 : totalU <= 200 ? 70 : 18 : totalU <= 40 ? 60 : totalU <= 120 ? 12 : 0;
+      const res = emsSearch({ l: CL, w: CW, h: CH }, valid, pay, restarts);
+      placed = res.placed;
+      weight = res.weight;
+      placed.forEach((p) => loaded[p.ti] = (loaded[p.ti] || 0) + 1);
+      layers = placed.length ? new Set(placed.map((p) => Math.round(p.y))).size : 0;
+    }
+    const contVol = CL * CW * CH / 1e6;
+    let usedVol = 0;
+    placed.forEach((p) => usedVol += p.dx * p.dy * p.dz / 1e6);
+    let rotHint = false, rotHintAll = false;
+    if (!opts.noHint && placed.length < totalBoxes && totalBoxes > 0 && totalBoxes <= 400) {
+      const anyFixed = types.some((t) => t.rotatable === false);
+      if (anyFixed) {
+        const forced = types.map((t) => ({ ...t, rotatable: true }));
+        const test = packCargo(Ct, forced, { noHint: true, quick: true });
+        if (test.boxes > placed.length) {
+          rotHint = true;
+          rotHintAll = test.boxes >= totalBoxes;
+        }
+      }
+    }
+    return { placed, perType: types.map((t, i) => ({ loaded: loaded[i], total: num(t.qty) })), contVol, usedVol, util: contVol > 0 ? usedVol / contVol * 100 : 0, weight, boxes: placed.length, totalBoxes, layers, single, rotHint, rotHintAll };
+  }
+  function suggestContainer(cargo) {
+    const totalBoxes = cargo.reduce((s, t) => s + Math.max(0, num(t.qty)), 0);
+    if (totalBoxes === 0) return null;
+    const order = Object.entries(PRESETS).map(([name, p]) => ({ name, p, vol: p.l * p.w * p.h })).sort((a, b) => a.vol - b.vol);
+    for (const o of order) {
+      const r = packCargo(o.p, cargo, { noHint: true, quick: true });
+      if (r.boxes >= totalBoxes) return { type: "single", name: o.name, preset: o.p };
+    }
+    const largest = order[order.length - 1];
+    for (const t of cargo) {
+      if (num(t.qty) > 0) {
+        const one = packCargo(largest.p, [{ ...t, qty: 1 }], { noHint: true, quick: true });
+        if (one.boxes === 0) return { type: "toobig", name: largest.name, item: t.name };
+      }
+    }
+    let remaining = cargo.map((t) => ({ ...t, qty: Math.max(0, Math.floor(num(t.qty))) }));
+    const used = {};
+    let guard = 0;
+    while (guard++ < 80) {
+      const tot = remaining.reduce((s, t) => s + t.qty, 0);
+      if (tot === 0) break;
+      let fit = null;
+      for (const o of order) {
+        const r2 = packCargo(o.p, remaining, { noHint: true, quick: true });
+        if (r2.boxes >= tot) {
+          fit = o;
+          break;
+        }
+      }
+      if (fit) {
+        used[fit.name] = (used[fit.name] || 0) + 1;
+        break;
+      }
+      const r = packCargo(largest.p, remaining, { noHint: true, quick: true });
+      if (r.boxes === 0) break;
+      used[largest.name] = (used[largest.name] || 0) + 1;
+      remaining = remaining.map((t, i) => ({ ...t, qty: t.qty - (r.perType[i]?.loaded || 0) }));
+    }
+    const combo = order.slice().reverse().filter((o) => used[o.name]).map((o) => ({ name: o.name, count: used[o.name] }));
+    return { type: "multi", combo };
+  }
+  var LANG = (() => {
+    try {
+      return (new URLSearchParams(window.location.search).get("lang") || "").toLowerCase().startsWith("en") ? "en" : "de";
+    } catch (e) {
+      return "de";
+    }
+  })();
+  var I18N = {
+    de: {
+      sub: "Beladung in Sekunden",
+      container: "Container",
+      len: "L\xE4nge",
+      wid: "Breite",
+      hei: "H\xF6he",
+      cargo: "Ladung",
+      addItem: "+ Packst\xFCck",
+      qty: "Anzahl",
+      weightPer: "Gewicht / St. (kg)",
+      dimHint: "cm \xB7 H = Gesamth\xF6he inkl. Ware",
+      stack: "Stapeln",
+      stackable: "stapelbar",
+      notStackable: "nicht stapelb.",
+      rotate: "Drehen",
+      loaded: "Verladen",
+      allLoaded: "Alles verladen",
+      open: (n) => `${n} offen`,
+      volume: "Volumen",
+      weight: "Gewicht",
+      layers: "Lagen",
+      stacked: "gestapelt",
+      mixed: "gemischt",
+      volUtil: "Volumenauslastung",
+      payloadUtil: "Zuladung",
+      gaugeSub: "% VOLL",
+      footL: "ISO 668 \xB7 EUR / ISO-Paletten \xB7 cm \xB7 kg",
+      footR: "geometrische Sch\xE4tzung \xB7 keine Achslast-Garantie",
+      rotOn: "Drehbar an",
+      apply: "\xDCbernehmen",
+      backToSite: "Zur Seite",
+      impBtn: "Aus Text",
+      impTitle: "Ladung aus Text importieren",
+      impPh: "z. B.\n18 Paletten 120x80x110, 300 kg, stapelbar\n6 Kartons 60x40x40, 12 kg\n2 Industriepaletten 120x100x120, 450 kg",
+      impDetect: "Erkennen",
+      impHint: "bitte pr\xFCfen \u2014 Ma\xDFe in cm",
+      impNone: "Nichts erkannt. Versuch z. B. \u201E18 Paletten 120x80x110, 300 kg\u201C.",
+      impDetected: (n) => `${n} Position${n === 1 ? "" : "en"} erkannt`,
+      impAdd: "Hinzuf\xFCgen",
+      impReplace: "Ersetzen",
+      impBack: "Zur\xFCck",
+      impCancel: "Abbrechen",
+      impApplied: (n) => `${n} Position${n === 1 ? "" : "en"} \xFCbernommen`,
+      shareBtn: "Teilen",
+      shareTitle: "Plan teilen",
+      shareDesc: "Jeder mit diesem Link sieht genau diesen Ladeplan in 3D \u2014 ohne Login, direkt im Browser.",
+      shareCopy: "Link kopieren",
+      shareCopied: "Kopiert \u2713",
+      shareOpen: "Vorschau \xF6ffnen \u2197",
+      doorChip: "T\xFCrma\xDF",
+      doorWarn: (n) => `${n} Position${n === 1 ? "" : "en"} ${n === 1 ? "passt" : "passen"} nicht durch die T\xFCr`,
+      doorHint: (w, h) => `T\xFCr\xF6ffnung ca. ${w}\xD7${h} cm`,
+      pdfBtn: "Ladevorschlag",
+      pdfTitle: "Ladevorschlag als PDF (\xF6ffnet Druckansicht)",
+      recRot: (p) => /* @__PURE__ */ React.createElement(React.Fragment, null, "Mit ", /* @__PURE__ */ React.createElement("b", { style: { color: "#9ecbff" } }, "90\xB0-Drehung"), " passt alles in den ", p, "."),
+      recSingle: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, "Empfehlung: ein ", /* @__PURE__ */ React.createElement("b", { style: { color: "#9ecbff" } }, n), " \u2014 dann passt alles rein."),
+      recMulti: (c) => /* @__PURE__ */ React.createElement(React.Fragment, null, "Du brauchst ca. ", /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, c), "."),
+      recTooBig: (i) => /* @__PURE__ */ React.createElement(React.Fragment, null, "\u201E", i, '" ist gr\xF6\xDFer als jeder Standard-Container.'),
+      recNoFit: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, n), " Packst\xFCcke passen nicht rein.")
+    },
+    en: {
+      sub: "Loading in seconds",
+      container: "Container",
+      len: "Length",
+      wid: "Width",
+      hei: "Height",
+      cargo: "Cargo",
+      addItem: "+ Item",
+      qty: "Qty",
+      weightPer: "Weight / unit (kg)",
+      dimHint: "cm \xB7 H = total height incl. goods",
+      stack: "Stacking",
+      stackable: "stackable",
+      notStackable: "not stackable",
+      rotate: "Rotate",
+      loaded: "Loaded",
+      allLoaded: "All loaded",
+      open: (n) => `${n} left`,
+      volume: "Volume",
+      weight: "Weight",
+      layers: "Layers",
+      stacked: "stacked",
+      mixed: "mixed",
+      volUtil: "Volume usage",
+      payloadUtil: "Payload",
+      gaugeSub: "% FULL",
+      footL: "ISO 668 \xB7 EUR / ISO pallets \xB7 cm \xB7 kg",
+      footR: "geometric estimate \xB7 no axle-load guarantee",
+      rotOn: "Enable rotation",
+      apply: "Apply",
+      backToSite: "Back to site",
+      impBtn: "From text",
+      impTitle: "Import cargo from text",
+      impPh: "e.g.\n18 pallets 120x80x110, 300 kg, stackable\n6 cartons 60x40x40, 12 kg\n2 industrial pallets 120x100x120, 450 kg",
+      impDetect: "Detect",
+      impHint: "please check \u2014 dimensions in cm",
+      impNone: 'Nothing detected. Try e.g. "18 pallets 120x80x110, 300 kg".',
+      impDetected: (n) => `${n} item${n === 1 ? "" : "s"} detected`,
+      impAdd: "Add",
+      impReplace: "Replace",
+      impBack: "Back",
+      impCancel: "Cancel",
+      impApplied: (n) => `${n} item${n === 1 ? "" : "s"} applied`,
+      shareBtn: "Share",
+      shareTitle: "Share plan",
+      shareDesc: "Anyone with this link sees this exact 3D load plan \u2014 no login, right in the browser.",
+      shareCopy: "Copy link",
+      shareCopied: "Copied \u2713",
+      shareOpen: "Open preview \u2197",
+      doorChip: "Door",
+      doorWarn: (n) => `${n} item${n === 1 ? "" : "s"} won\u2019t fit through the door`,
+      doorHint: (w, h) => `Door opening approx. ${w}\xD7${h} cm`,
+      pdfBtn: "Load proposal",
+      pdfTitle: "Load proposal as PDF (opens print view)",
+      recRot: (p) => /* @__PURE__ */ React.createElement(React.Fragment, null, "A ", /* @__PURE__ */ React.createElement("b", { style: { color: "#9ecbff" } }, "90\xB0 turn"), " fits everything in the ", p, "."),
+      recSingle: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, "Recommendation: one ", /* @__PURE__ */ React.createElement("b", { style: { color: "#9ecbff" } }, n), " \u2014 then it all fits."),
+      recMulti: (c) => /* @__PURE__ */ React.createElement(React.Fragment, null, "You need approx. ", /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, c), "."),
+      recTooBig: (i) => /* @__PURE__ */ React.createElement(React.Fragment, null, '"', i, '" is larger than any standard container.'),
+      recNoFit: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, n), " items don't fit.")
+    }
+  };
+  var T = I18N[LANG];
+  var EMBEDDED = (() => {
+    try {
+      return window.self !== window.top;
+    } catch (e) {
+      return true;
+    }
+  })();
+  var homeHref = "index.html" + (LANG === "en" ? "?lang=en" : "");
+  var SHARED = (() => {
+    try {
+      const p = new URLSearchParams(window.location.search).get("p");
+      if (!p) return null;
+      const json = decodeURIComponent(escape(window.atob(p.replace(/-/g, "+").replace(/_/g, "/"))));
+      const st = JSON.parse(json);
+      if (!st || !Array.isArray(st.it) || !st.it.length) return null;
+      const cargo = st.it.map((r) => ({ id: uid(), name: (r.n || "Position").slice(0, 40), l: Math.max(1, +r.l || 1), w: Math.max(1, +r.w || 1), h: Math.max(1, +r.h || 1), weight: Math.max(0, +r.wt || 0), qty: Math.max(1, +r.q || 1), stackable: r.s !== 0, rotatable: r.r !== 0 }));
+      const preset = typeof st.pr === "string" && PRESETS[st.pr] ? st.pr : "Custom";
+      const _base = PRESETS[preset] || PRESETS["20' GP"];
+      const container = st.co && +st.co.l ? { l: +st.co.l, w: +st.co.w, h: +st.co.h, payload: +st.co.p || 28e3, door: _base.door } : { ..._base };
+      return { preset, container, cargo };
+    } catch (e) {
+      return null;
+    }
+  })();
+  var encodePlanURL = (preset, container, cargo) => {
+    const st = { pr: preset, co: { l: container.l, w: container.w, h: container.h, p: container.payload }, it: cargo.map((c) => ({ n: c.name, l: c.l, w: c.w, h: c.h, wt: c.weight, q: c.qty, s: c.stackable ? 1 : 0, r: c.rotatable ? 1 : 0 })) };
+    const b = window.btoa(unescape(encodeURIComponent(JSON.stringify(st)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    return window.location.origin + window.location.pathname.replace(/[^/]*$/, "share.html") + "?p=" + b;
+  };
+  var fmtDE = (n) => Math.round(num(n, 0)).toLocaleString("de-DE");
+  var fmt1DE = (n) => num(n, 0).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  var escHTML = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  var makeQR = (text) => {
+    try {
+      const f = window.__QRLIB;
+      if (!f) return "";
+      const qr = f(0, "M");
+      qr.addData(String(text));
+      qr.make();
+      return qr.createDataURL(6, 4);
+    } catch (e) {
+      return "";
+    }
+  };
+  var LV_ROW = (it, i) => {
+    const q = Math.max(0, num(it.qty, 1));
+    const totKg = q * num(it.weight, 0);
+    const volC = q * num(it.l) * num(it.w) * num(it.h) / 1e6;
+    const stack = it.stackable !== false;
+    const dims = `${num(it.l)} \xD7 ${num(it.w)} \xD7 ${num(it.h)}`;
+    const nm = escHTML(it.name || "Position " + (i + 1));
+    const pos = String(i + 1).padStart(2, "0");
+    const badge = stack ? `<span style="font-family:'JetBrains Mono',monospace; font-size:9.5px; padding:3px 9px; border-radius:20px; background:var(--ac-soft,#ecfeff); color:var(--ac-solid,#0891b2); font-weight:600;">JA</span>` : `<span style="font-family:'JetBrains Mono',monospace; font-size:9.5px; padding:3px 9px; border-radius:20px; background:#f1f3f5; color:#8492a6; font-weight:600;">NEIN</span>`;
+    return `<tr style="border-bottom:1px solid #f0f1f4;"><td style="padding:11px 8px 11px 0;"><span style="font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; color:var(--ac-solid,#0891b2);">${pos}</span></td><td style="padding:11px 8px; font-weight:600;">${nm}</td><td style="padding:11px 8px; text-align:right; font-family:'JetBrains Mono',monospace;">${q}</td><td style="padding:11px 8px; text-align:right; font-family:'JetBrains Mono',monospace; color:#5b6b80;">${dims}</td><td style="padding:11px 8px; text-align:right; font-family:'JetBrains Mono',monospace;">${fmtDE(it.weight)}</td><td style="padding:11px 8px; text-align:right; font-family:'JetBrains Mono',monospace; font-weight:600;">${fmtDE(totKg)}</td><td style="padding:11px 8px; text-align:right; font-family:'JetBrains Mono',monospace; color:#5b6b80;">${fmt1DE(volC)}</td><td style="padding:11px 0 11px 8px; text-align:center;">${badge}</td></tr>`;
+  };
+  var LV_PAGE = (D) => {
+    const { REF, DATUM, CONTAINER_LABEL, INNENMASS, PAYLOAD, POSCOUNT, COLLI, VOL, VOLBAR, VOLPCT, WEIGHT, WTBAR, WTPCT, PASSTIN, PASSTSUB, ROWS, SUMQTY, SUMKG, SUMVOL, QR } = D;
+    return `<div class="page" style="width:794px; min-height:1123px; background:#ffffff; box-shadow:0 20px 60px rgba(15,23,42,.18); border-radius:6px; overflow:hidden; position:relative; display:flex; flex-direction:column; color:#0c1320;">
+
+    <!-- accent top bar -->
+    <div style="height:5px; background:var(--ac-grad,linear-gradient(135deg,#22d3ee,#14b8a6));"></div>
+
+    <!-- HERO -->
+    <div style="background:var(--hero-bg,linear-gradient(135deg,#0b1119 0%,#0f1c2e 60%,#0c1622 100%)); color:var(--hero-ink,#fff); padding:30px 44px 30px; position:relative; overflow:hidden;">
+      <div style="position:absolute; top:-90px; right:-60px; width:300px; height:300px; border-radius:50%; background:var(--ac-grad,linear-gradient(135deg,#22d3ee,#14b8a6)); opacity:.10; filter:blur(10px);"></div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; position:relative;">
+        <div style="display:flex; align-items:center; gap:11px;">
+          <div style="width:34px; height:34px; border-radius:9px; background:var(--ac-grad,linear-gradient(135deg,#22d3ee,#14b8a6)); display:flex; align-items:center; justify-content:center;">
+            <svg width="18" height="14" viewBox="0 0 18 14" fill="none"><rect x="0.5" y="0.5" width="17" height="13" rx="1.5" stroke="#0b1119" stroke-opacity="0.85"></rect><line x1="5" y1="1" x2="5" y2="13" stroke="#0b1119" stroke-opacity="0.85"></line><line x1="9" y1="1" x2="9" y2="13" stroke="#0b1119" stroke-opacity="0.85"></line><line x1="13" y1="1" x2="13" y2="13" stroke="#0b1119" stroke-opacity="0.85"></line></svg>
+          </div>
+          <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; letter-spacing:-.01em;">Container<span style="background:var(--ac-grad,linear-gradient(135deg,#22d3ee,#14b8a6)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">Load</span></div>
+        </div>
+        <div style="text-align:right; font-family:'JetBrains Mono',monospace; font-size:10.5px; line-height:1.7; color:var(--hero-sub,#8a98ad);">
+          <div>REF&nbsp;&nbsp;<span style="color:var(--hero-ink,#fff);">${REF}</span></div>
+          <div>DATUM&nbsp;&nbsp;<span style="color:var(--hero-ink,#fff);">${DATUM}</span></div>
+        </div>
+      </div>
+
+      <div style="margin-top:26px; position:relative;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.32em; color:var(--ac-solid,#22d3ee); font-weight:600;">LADEVORSCHLAG</div>
+        <h1 style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:38px; line-height:1.04; letter-spacing:-.02em; margin:9px 0 0;">Unverbindlicher<br>Beladungsplan</h1>
+      </div>
+
+      <div style="display:flex; gap:9px; margin-top:22px; flex-wrap:wrap; position:relative;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; padding:8px 13px; border-radius:8px; border:1px solid var(--hero-line,rgba(255,255,255,.1)); background:var(--hero-chip,rgba(255,255,255,.045)); display:flex; align-items:center; gap:7px;"><span style="color:var(--hero-sub,#8a98ad);">CONTAINER</span> <span style="font-weight:600;">${CONTAINER_LABEL}</span></div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; padding:8px 13px; border-radius:8px; border:1px solid var(--hero-line,rgba(255,255,255,.1)); background:var(--hero-chip,rgba(255,255,255,.045)); display:flex; align-items:center; gap:7px;"><span style="color:var(--hero-sub,#8a98ad);">INNENMASS</span> <span style="font-weight:600;">${INNENMASS}</span></div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:11px; padding:8px 13px; border-radius:8px; border:1px solid var(--hero-line,rgba(255,255,255,.1)); background:var(--hero-chip,rgba(255,255,255,.045)); display:flex; align-items:center; gap:7px;"><span style="color:var(--hero-sub,#8a98ad);">MAX. ZULADUNG</span> <span style="font-weight:600;">${PAYLOAD} kg</span></div>
+      </div>
+    </div>
+
+    <!-- DISCLAIMER STRIP -->
+    <div style="display:flex; gap:13px; align-items:flex-start; padding:13px 44px; background:#fafbfc; border-bottom:1px solid #eef0f3;">
+      <div style="width:3px; align-self:stretch; border-radius:2px; background:var(--ac-grad,linear-gradient(135deg,#22d3ee,#14b8a6)); flex:none;"></div>
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.16em; font-weight:600; color:var(--ac-solid,#0891b2);">UNVERBINDLICHER VORSCHLAG \u2014 BITTE PR\xDCFEN</div>
+        <p style="margin:5px 0 0; font-size:10.5px; line-height:1.55; color:#5b6b80; max-width:660px;">Vorschlag auf Basis der eingegebenen Ma\xDFe und Gewichte. Rein geometrische Berechnung \u2014 ohne Pr\xFCfung von tats\xE4chlichem Gewicht, Achslast, Schwerpunkt oder Ladungssicherung. Verladung, Gewichtsverteilung und Sicherung sind vor dem Transport eigenverantwortlich zu pr\xFCfen. Kein amtliches Dokument.</p>
+      </div>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:13px; padding:22px 44px 6px;">
+      <div style="border:1px solid #eceef2; border-radius:13px; padding:15px 16px;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.16em; color:#8492a6; font-weight:500;">POSITIONEN</div>
+        <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:30px; line-height:1; margin-top:9px;">${POSCOUNT}</div>
+        <div style="font-size:11px; color:#5b6b80; margin-top:7px;">${COLLI} Colli gesamt</div>
+      </div>
+      <div style="border:1px solid #eceef2; border-radius:13px; padding:15px 16px;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.16em; color:#8492a6; font-weight:500;">VOLUMEN</div>
+        <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:30px; line-height:1; margin-top:9px;">${VOL}<span style="font-size:14px; color:#5b6b80; font-weight:600;"> cbm</span></div>
+        <div style="height:5px; border-radius:3px; background:#eef0f3; margin-top:10px; overflow:hidden;"><div style="width:${VOLBAR}%; height:100%; background:var(--ac-grad,linear-gradient(135deg,#22d3ee,#14b8a6));"></div></div>
+        <div style="font-size:10.5px; color:var(--ac-solid,#0891b2); margin-top:5px; font-weight:600;">${VOLPCT} % Auslastung</div>
+      </div>
+      <div style="border:1px solid #eceef2; border-radius:13px; padding:15px 16px;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.16em; color:#8492a6; font-weight:500;">GEWICHT \xB7 EINGABE</div>
+        <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:30px; line-height:1; margin-top:9px;">${WEIGHT}<span style="font-size:14px; color:#5b6b80; font-weight:600;"> kg</span></div>
+        <div style="height:5px; border-radius:3px; background:#eef0f3; margin-top:10px; overflow:hidden;"><div style="width:${WTBAR}%; height:100%; background:var(--ac-grad,linear-gradient(135deg,#22d3ee,#14b8a6));"></div></div>
+        <div style="font-size:10.5px; color:var(--ac-solid,#0891b2); margin-top:5px; font-weight:600;">${WTPCT} % der Zuladung</div>
+      </div>
+      <div style="border:1px solid var(--ac-solid,#0891b2); border-radius:13px; padding:15px 16px; background:var(--ac-soft,#ecfeff); position:relative;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.16em; color:var(--ac-solid,#0891b2); font-weight:600;">PASST IN</div>
+        <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:26px; line-height:1.05; margin-top:9px; color:#0c1320;">${PASSTIN}</div>
+        <div style="font-size:11px; color:var(--ac-solid,#0891b2); margin-top:7px; font-weight:600; display:flex; align-items:center; gap:5px;"><span style="display:inline-flex; width:14px; height:14px; border-radius:50%; background:var(--ac-grad,linear-gradient(135deg,#22d3ee,#14b8a6)); color:#fff; align-items:center; justify-content:center; font-size:9px;">\u2713</span> ${PASSTSUB}</div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div style="padding:18px 44px 4px;">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:9px;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.2em; color:#0c1320; font-weight:600;">POSITIONEN</div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#8492a6;">${POSCOUNT} EINTR\xC4GE \xB7 ${COLLI} COLLI</div>
+      </div>
+      <table style="width:100%; border-collapse:collapse; font-size:12px;">
+        <thead>
+          <tr style="font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.06em; color:#8492a6; text-transform:uppercase;">
+            <th style="text-align:left; padding:0 8px 9px 0; font-weight:500; border-bottom:1.5px solid #0c1320;">Pos</th>
+            <th style="text-align:left; padding:0 8px 9px; font-weight:500; border-bottom:1.5px solid #0c1320;">Bezeichnung</th>
+            <th style="text-align:right; padding:0 8px 9px; font-weight:500; border-bottom:1.5px solid #0c1320;">Anzahl</th>
+            <th style="text-align:right; padding:0 8px 9px; font-weight:500; border-bottom:1.5px solid #0c1320;">Ma\xDFe L\xD7B\xD7H</th>
+            <th style="text-align:right; padding:0 8px 9px; font-weight:500; border-bottom:1.5px solid #0c1320;">Gew./Stk</th>
+            <th style="text-align:right; padding:0 8px 9px; font-weight:500; border-bottom:1.5px solid #0c1320;">Gesamt kg</th>
+            <th style="text-align:right; padding:0 8px 9px; font-weight:500; border-bottom:1.5px solid #0c1320;">Vol. cbm</th>
+            <th style="text-align:center; padding:0 0 9px 8px; font-weight:500; border-bottom:1.5px solid #0c1320;">Stapelb.</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${ROWS}
+          <tr style="font-family:'JetBrains Mono',monospace;">
+            <td style="padding:12px 8px 0 0; border-top:1.5px solid #0c1320;"></td>
+            <td style="padding:12px 8px 0; border-top:1.5px solid #0c1320; font-weight:700; font-family:'Manrope',sans-serif;">Summe</td>
+            <td style="padding:12px 8px 0; text-align:right; border-top:1.5px solid #0c1320; font-weight:700;">${SUMQTY}</td>
+            <td style="padding:12px 8px 0; border-top:1.5px solid #0c1320;"></td>
+            <td style="padding:12px 8px 0; border-top:1.5px solid #0c1320;"></td>
+            <td style="padding:12px 8px 0; text-align:right; border-top:1.5px solid #0c1320; font-weight:700;">${SUMKG}</td>
+            <td style="padding:12px 8px 0; text-align:right; border-top:1.5px solid #0c1320; font-weight:700;">${SUMVOL}</td>
+            <td style="padding:12px 0 0 8px; border-top:1.5px solid #0c1320;"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- HINTS + 3D/QR -->
+    <div style="display:grid; grid-template-columns:1.15fr 1fr; gap:18px; padding:20px 44px 0; align-items:stretch;">
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.2em; color:#0c1320; font-weight:600; margin-bottom:11px;">HINWEISE <span style="color:#8492a6; letter-spacing:.08em;">\xB7 UNVERBINDLICH</span></div>
+        <div style="display:flex; flex-direction:column; gap:9px;">
+          <div style="display:flex; gap:9px; align-items:flex-start;"><span style="width:6px; height:6px; border-radius:50%; background:var(--ac-solid,#0891b2); margin-top:5px; flex:none;"></span><span style="font-size:11.5px; line-height:1.45; color:#384557;">Schwere Paletten bodennah und gleichm\xE4\xDFig verteilt einplanen.</span></div>
+          <div style="display:flex; gap:9px; align-items:flex-start;"><span style="width:6px; height:6px; border-radius:50%; background:var(--ac-solid,#0891b2); margin-top:5px; flex:none;"></span><span style="font-size:11.5px; line-height:1.45; color:#384557;">Nicht stapelbare Positionen zuletzt bzw. oben verladen.</span></div>
+          <div style="display:flex; gap:9px; align-items:flex-start;"><span style="width:6px; height:6px; border-radius:50%; background:var(--ac-solid,#0891b2); margin-top:5px; flex:none;"></span><span style="font-size:11.5px; line-height:1.45; color:#384557;">Achslast, Schwerpunkt und Ladungssicherung separat fachlich pr\xFCfen.</span></div>
+          <div style="display:flex; gap:9px; align-items:flex-start;"><span style="width:6px; height:6px; border-radius:50%; background:var(--ac-solid,#0891b2); margin-top:5px; flex:none;"></span><span style="font-size:11.5px; line-height:1.45; color:#384557;">Gewichte = Ihre Eingaben, vom Tool nicht verifiziert.</span></div>
+        </div>
+      </div>
+
+      <div style="background:linear-gradient(135deg,#0b1119 0%,#0f1c2e 100%); border-radius:15px; padding:20px; display:flex; gap:16px; align-items:center; position:relative; overflow:hidden;">
+        <div style="position:absolute; bottom:-50px; left:-40px; width:160px; height:160px; border-radius:50%; background:var(--ac-grad,linear-gradient(135deg,#22d3ee,#14b8a6)); opacity:.16; filter:blur(6px);"></div>
+        <div style="position:relative; flex:1;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.18em; color:var(--ac-solid,#22d3ee); font-weight:600;">INTERAKTIVER 3D-PLAN</div>
+          <div style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:16px; color:#fff; margin-top:8px; line-height:1.2;">Plan in 3D drehen &amp; pr\xFCfen</div>
+          <p style="font-size:10.5px; line-height:1.5; color:#8a98ad; margin:8px 0 0;">QR scannen \u2192 Beladung in 3D ansehen, anpassen und teilen. Ohne Login, direkt im Browser.</p>
+        </div>
+        <div style="position:relative; background:#fff; padding:7px; border-radius:10px; flex:none;">
+          <img src="${QR}" alt="QR-Code 3D-Plan" width="92" height="92" style="display:block; border-radius:4px;">
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="margin-top:auto; display:flex; justify-content:space-between; align-items:center; gap:20px; padding:18px 44px; border-top:1px solid #eceef2; margin-top:24px;">
+      <p style="font-size:9.5px; line-height:1.5; color:#8492a6; margin:0; max-width:480px;">Kein amtliches Dokument \xB7 unverbindlicher Vorschlag auf Basis der Eingaben \xB7 ersetzt keine fachliche Pr\xFCfung der Ladungssicherung, Achslast oder Gewichtsverteilung.</p>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; color:#5b6b80; text-align:right; white-space:nowrap;">containerload.io<br><span style="color:#aab4c2;">Seite 1 / 1</span></div>
+    </div>
+
+  </div>`;
+  };
+  var LV_DOC = (pageHTML) => `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Ladevorschlag \xB7 ContainerLoad</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"><style>@page{size:A4;margin:0}*{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}html,body{background:#fff;font-family:'Manrope',sans-serif}@media screen{body{background:#e6e8ec;display:flex;flex-direction:column;align-items:center;padding:24px 16px 96px}}.cl-tb{position:fixed;bottom:0;left:0;right:0;display:flex;gap:10px;justify-content:center;align-items:center;padding:12px;background:rgba(11,17,25,.96);box-shadow:0 -4px 20px rgba(0,0,0,.3);z-index:99}.cl-tb button{font:600 13px/1 'Manrope',sans-serif;padding:10px 18px;border-radius:9px;border:0;cursor:pointer}.cl-pdf{background:linear-gradient(135deg,#22d3ee,#14b8a6);color:#04101f}.cl-x{background:#1c2735;color:#cbd5e1}@media print{.cl-tb{display:none!important}.page{box-shadow:none!important;border-radius:0!important;margin:0!important}}</style></head><body>${pageHTML}<div class="cl-tb"><button class="cl-pdf" onclick="window.print()">Als PDF speichern / drucken</button><button class="cl-x" onclick="window.close()">Schlie\xDFen</button></div><script>(function(){function g(){try{window.focus();window.print();}catch(e){}}if(document.fonts&&document.fonts.ready){document.fonts.ready.then(function(){setTimeout(g,300);});}else{window.addEventListener('load',function(){setTimeout(g,600);});}})();<\/script></body></html>`;
+  var QIMPORT = (() => {
+    try {
+      const q = new URLSearchParams(window.location.search).get("q");
+      if (q) {
+        const rows = parseCargoText(q);
+        if (rows && rows.length) return rows.map((r) => ({ id: uid(), name: r.name, l: r.l, w: r.w, h: r.h, weight: r.weight, qty: r.qty, stackable: r.stackable, rotatable: r.rotatable }));
+      }
+    } catch (e) {
+    }
+    return null;
+  })();
+  function Viewport({ container, result }) {
+    const mountRef = useRef(null);
+    const three = useRef(null);
+    const lastDims = useRef("");
+    const reveal = useRef({ start: 0, animate: false, prevN: -1 });
+    useEffect(() => {
+      const mount = mountRef.current;
+      const W = mount.clientWidth || 600, H = mount.clientHeight || 460;
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.Fog(461327, 16, 46);
+      const camera = new THREE.PerspectiveCamera(40, W / H, 0.05, 1e3);
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(W, H);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.domElement.style.display = "block";
+      renderer.domElement.style.touchAction = "none";
+      mount.appendChild(renderer.domElement);
+      scene.add(new THREE.HemisphereLight(12572415, 658964, 0.7));
+      const key = new THREE.DirectionalLight(16777215, 1.05);
+      key.position.set(7, 17, 9);
+      key.castShadow = true;
+      key.shadow.mapSize.set(1024, 1024);
+      key.shadow.camera.near = 1;
+      key.shadow.camera.far = 70;
+      key.shadow.camera.left = -14;
+      key.shadow.camera.right = 14;
+      key.shadow.camera.top = 14;
+      key.shadow.camera.bottom = -14;
+      key.shadow.bias = -4e-4;
+      scene.add(key);
+      const fill = new THREE.DirectionalLight(7317759, 0.34);
+      fill.position.set(-9, 5, -7);
+      scene.add(fill);
+      const group = new THREE.Group();
+      scene.add(group);
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), new THREE.ShadowMaterial({ opacity: 0.34 }));
+      ground.rotation.x = -Math.PI / 2;
+      ground.receiveShadow = true;
+      scene.add(ground);
+      const target = new THREE.Vector3(0, 0, 0);
+      const sph = { r: 14, theta: -0.92, phi: 1 };
+      const cur = { r: 14, theta: -0.92, phi: 1 };
+      const applyCam = () => {
+        camera.position.set(
+          target.x + cur.r * Math.sin(cur.phi) * Math.cos(cur.theta),
+          target.y + cur.r * Math.cos(cur.phi),
+          target.z + cur.r * Math.sin(cur.phi) * Math.sin(cur.theta)
+        );
+        camera.lookAt(target);
+      };
+      let lastInteract = performance.now();
+      let dragging = false, px = 0, py = 0;
+      const dom = renderer.domElement;
+      const down = (e) => {
+        dragging = true;
+        px = e.clientX;
+        py = e.clientY;
+        lastInteract = performance.now();
+        dom.setPointerCapture?.(e.pointerId);
+      };
+      const move = (e) => {
+        if (!dragging) return;
+        lastInteract = performance.now();
+        sph.theta -= (e.clientX - px) * 6e-3;
+        sph.phi = Math.max(0.18, Math.min(Math.PI * 0.49, sph.phi - (e.clientY - py) * 6e-3));
+        px = e.clientX;
+        py = e.clientY;
+      };
+      const up = (e) => {
+        dragging = false;
+        dom.releasePointerCapture?.(e.pointerId);
+      };
+      const wheel = (e) => {
+        e.preventDefault();
+        lastInteract = performance.now();
+        sph.r = Math.max(2.5, Math.min(95, sph.r * (1 + e.deltaY * 11e-4)));
+      };
+      dom.addEventListener("pointerdown", down);
+      dom.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+      dom.addEventListener("wheel", wheel, { passive: false });
+      let raf;
+      const tick = () => {
+        const now = performance.now();
+        if (now - lastInteract > 2800 && !dragging) sph.theta += 15e-4;
+        cur.r += (sph.r - cur.r) * 0.12;
+        cur.theta += (sph.theta - cur.theta) * 0.12;
+        cur.phi += (sph.phi - cur.phi) * 0.12;
+        applyCam();
+        const rv = reveal.current;
+        if (rv.animate) {
+          const el = (now - rv.start) / 1e3, dur = 0.4, stag = 0.55;
+          let any = false;
+          group.children.forEach((ch) => {
+            if (ch.userData && ch.userData.boxes) {
+              any = true;
+              const arr = ch.userData.boxes, dm = ch.userData.dummy, N = Math.max(1, arr.length);
+              for (let i = 0; i < arr.length; i++) {
+                const b = arr[i];
+                const delay = i / N * stag;
+                let p = (el - delay) / dur;
+                p = p < 0 ? 0 : p > 1 ? 1 : p;
+                const e2 = Math.max(1e-4, 1 - Math.pow(1 - p, 3));
+                dm.position.set(b.cx, b.cy, b.cz);
+                dm.scale.set(b.sx * e2, b.sy * e2, b.sz * e2);
+                dm.updateMatrix();
+                ch.setMatrixAt(i, dm.matrix);
+              }
+              ch.instanceMatrix.needsUpdate = true;
+            }
+          });
+          if (!any || el > dur + stag + 0.06) {
+            group.children.forEach((ch) => {
+              if (ch.userData && ch.userData.boxes) {
+                const arr = ch.userData.boxes, dm = ch.userData.dummy;
+                for (let i = 0; i < arr.length; i++) {
+                  const b = arr[i];
+                  dm.position.set(b.cx, b.cy, b.cz);
+                  dm.scale.set(b.sx, b.sy, b.sz);
+                  dm.updateMatrix();
+                  ch.setMatrixAt(i, dm.matrix);
+                }
+                ch.instanceMatrix.needsUpdate = true;
+              }
+            });
+            rv.animate = false;
+          }
+        }
+        renderer.render(scene, camera);
+        raf = requestAnimationFrame(tick);
+      };
+      tick();
+      const ro = new ResizeObserver(() => {
+        const w = mount.clientWidth, h = mount.clientHeight;
+        if (w && h) {
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+          renderer.setSize(w, h);
+        }
+      });
+      ro.observe(mount);
+      three.current = { scene, camera, group, target, sph, cur, applyCam };
+      return () => {
+        cancelAnimationFrame(raf);
+        ro.disconnect();
+        dom.removeEventListener("pointerdown", down);
+        dom.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+        dom.removeEventListener("wheel", wheel);
+        renderer.dispose();
+        if (dom.parentNode) dom.parentNode.removeChild(dom);
+      };
+    }, []);
+    useEffect(() => {
+      const t = three.current;
+      if (!t) return;
+      const { group } = t;
+      while (group.children.length) {
+        const c = group.children.pop();
+        c.geometry?.dispose?.();
+        const _ms = Array.isArray(c.material) ? c.material : [c.material];
+        _ms.forEach((m) => {
+          if (m && m.map && m.map.dispose) m.map.dispose();
+          if (m && m.dispose) m.dispose();
+        });
+      }
+      const CL = num(container.l) / 100, CH = num(container.h) / 100, CW = num(container.w) / 100;
+      if (CL <= 0 || CH <= 0 || CW <= 0) return;
+      const cx = CL / 2, cy = CH / 2, cz = CW / 2;
+      const STEEL = 3359322, FRAME = 4873598;
+      const mkRib = (rep) => {
+        const cv = document.createElement("canvas");
+        cv.width = 256;
+        cv.height = 8;
+        const g2 = cv.getContext("2d");
+        for (let x = 0; x < 256; x++) {
+          const sN = 0.5 + 0.5 * Math.sin(x / 256 * Math.PI * 2);
+          const v = Math.floor(60 + sN * 80);
+          g2.fillStyle = "rgb(" + v + "," + (v + 10) + "," + (v + 26) + ")";
+          g2.fillRect(x, 0, 1, 8);
+        }
+        const t2 = new THREE.CanvasTexture(cv);
+        t2.wrapS = t2.wrapT = THREE.RepeatWrapping;
+        t2.repeat.set(Math.max(2, Math.round(rep)), 1);
+        return t2;
+      };
+      const addWall = (w, h, wx, wy, wz, roty, rep, op) => {
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: mkRib(rep), color: STEEL, transparent: true, opacity: op, depthWrite: false, roughness: 0.8, metalness: 0.28, side: THREE.DoubleSide }));
+        m.position.set(wx, wy, wz);
+        if (roty) m.rotation.y = roty;
+        group.add(m);
+        return m;
+      };
+      addWall(CL, CH, cx, cy, 0, 0, CL * 4, 0.15);
+      addWall(CL, CH, cx, cy, CW, 0, CL * 4, 0.15);
+      addWall(CW, CH, 0, cy, cz, Math.PI / 2, CW * 4, 0.16);
+      addWall(CW, CH, CL, cy, cz, Math.PI / 2, CW * 4, 0.1);
+      const roof = new THREE.Mesh(new THREE.PlaneGeometry(CL, CW), new THREE.MeshStandardMaterial({ color: STEEL, transparent: true, opacity: 0.05, depthWrite: false, side: THREE.DoubleSide }));
+      roof.rotation.x = -Math.PI / 2;
+      roof.position.set(cx, CH, cz);
+      group.add(roof);
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(CL, CW), new THREE.MeshStandardMaterial({ color: 2107962, roughness: 0.9, metalness: 0.12 }));
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.set(cx, 5e-3, cz);
+      floor.receiveShadow = true;
+      group.add(floor);
+      const fmat = new THREE.MeshStandardMaterial({ color: FRAME, roughness: 0.5, metalness: 0.5 });
+      const P = 0.055;
+      [[0, 0], [CL, 0], [0, CW], [CL, CW]].forEach((c2) => {
+        const b = new THREE.Mesh(new THREE.BoxGeometry(P, CH, P), fmat);
+        b.position.set(c2[0], cy, c2[1]);
+        b.castShadow = true;
+        group.add(b);
+      });
+      [0, CH].forEach((y) => {
+        const a1 = new THREE.Mesh(new THREE.BoxGeometry(CL + P, P, P), fmat);
+        a1.position.set(cx, y, 0);
+        group.add(a1);
+        const a2 = new THREE.Mesh(new THREE.BoxGeometry(CL + P, P, P), fmat);
+        a2.position.set(cx, y, CW);
+        group.add(a2);
+        const b1 = new THREE.Mesh(new THREE.BoxGeometry(P, P, CW + P), fmat);
+        b1.position.set(0, y, cz);
+        group.add(b1);
+        const b2 = new THREE.Mesh(new THREE.BoxGeometry(P, P, CW + P), fmat);
+        b2.position.set(CL, y, cz);
+        group.add(b2);
+      });
+      const seam = new THREE.Mesh(new THREE.BoxGeometry(0.03, CH * 0.94, 0.03), fmat);
+      seam.position.set(CL + 2e-3, cy, cz);
+      group.add(seam);
+      const topEdge = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(CL, CW)), new THREE.LineBasicMaterial({ color: 7312324, transparent: true, opacity: 0.55 }));
+      topEdge.rotation.x = -Math.PI / 2;
+      topEdge.position.set(cx, CH + 1e-3, cz);
+      group.add(topEdge);
+      const grid = new THREE.GridHelper(Math.ceil(Math.max(CL, CW)) + 2, Math.ceil(Math.max(CL, CW)) + 2, 2899024, 1449771);
+      grid.position.set(cx, 2e-3, cz);
+      grid.material.transparent = true;
+      grid.material.opacity = 0.5;
+      group.add(grid);
+      const placed = result?.placed || [];
+      const byType = {};
+      placed.forEach((p) => (byType[p.ti] = byType[p.ti] || []).push(p));
+      const willAnimate = placed.length > 0 && placed.length <= 280 && placed.length !== reveal.current.prevN;
+      reveal.current.prevN = placed.length;
+      const gap = 0.02;
+      const dummy = new THREE.Object3D();
+      Object.entries(byType).forEach(([ti, arr]) => {
+        const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(TYPE_COLORS[ti % TYPE_COLORS.length]), roughness: 0.62, metalness: 0.08 });
+        const inst = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), mat, arr.length);
+        inst.castShadow = true;
+        inst.receiveShadow = true;
+        const boxes = arr.map((p) => {
+          const dx = p.dx / 100, dy = p.dy / 100, dz = p.dz / 100;
+          return { cx: p.x / 100 + dx / 2, cy: p.y / 100 + dy / 2, cz: p.z / 100 + dz / 2, sx: Math.max(dx - gap, 0.01), sy: Math.max(dy - gap, 0.01), sz: Math.max(dz - gap, 0.01) };
+        });
+        boxes.forEach((b, i) => {
+          const s = willAnimate ? 1e-4 : 1;
+          dummy.position.set(b.cx, b.cy, b.cz);
+          dummy.scale.set(b.sx * s, b.sy * s, b.sz * s);
+          dummy.updateMatrix();
+          inst.setMatrixAt(i, dummy.matrix);
+        });
+        inst.instanceMatrix.needsUpdate = true;
+        inst.userData = { boxes, dummy };
+        group.add(inst);
+      });
+      if (willAnimate) reveal.current = { ...reveal.current, start: performance.now(), animate: true };
+      const dimKey = `${CL}-${CH}-${CW}`;
+      if (lastDims.current !== dimKey) {
+        lastDims.current = dimKey;
+        t.target.set(cx, cy, cz);
+        t.sph.r = Math.sqrt(CL * CL + CH * CH + CW * CW) * 1.42;
+      }
+    }, [result, container]);
+    const reset = () => {
+      const t = three.current;
+      if (!t) return;
+      const CL = num(container.l) / 100, CH = num(container.h) / 100, CW = num(container.w) / 100;
+      t.target.set(CL / 2, CH / 2, CW / 2);
+      t.sph.r = Math.sqrt(CL * CL + CH * CH + CW * CW) * 1.42;
+      t.sph.theta = -0.92;
+      t.sph.phi = 1;
+    };
+    return /* @__PURE__ */ React.createElement("div", { className: "relative w-full h-full" }, /* @__PURE__ */ React.createElement("div", { ref: mountRef, className: "w-full h-full", style: { background: "radial-gradient(120% 80% at 50% 0%, #101a2b 0%, #0a0f17 55%, #070a0f 100%)" } }), /* @__PURE__ */ React.createElement("div", { className: "absolute inset-0 pointer-events-none", style: { background: "radial-gradient(75% 70% at 50% 45%, transparent 55%, rgba(4,7,11,0.55) 100%)" } }), /* @__PURE__ */ React.createElement("div", { className: "absolute bottom-3 left-4 text-[10px] tracking-[0.18em] uppercase pointer-events-none", style: { fontFamily: MONO, color: C.faint } }, "ziehen \xB7 scrollen"), /* @__PURE__ */ React.createElement("button", { onClick: reset, className: "absolute top-3 right-3 w-8 h-8 rounded-lg flex items-center justify-center transition hover:brightness-125", style: { background: hexA("#0c121c", 0.8), border: `1px solid ${hexA(C.accent, 0.3)}`, color: C.dim, backdropFilter: "blur(6px)" }, title: "Ansicht zur\xFCcksetzen" }, "\u27F3"));
+  }
+  var Label = ({ children }) => /* @__PURE__ */ React.createElement("span", { className: "block mb-1.5", style: { fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", color: C.dim } }, children);
+  var Num = ({ value, onChange, mono = true }) => /* @__PURE__ */ React.createElement(
+    "input",
+    {
+      type: "number",
+      value,
+      onChange: (e) => onChange(e.target.value === "" ? "" : Number(e.target.value)),
+      className: "w-full rounded-lg px-3 py-2 focus:outline-none",
+      style: { background: C.field, border: `1px solid ${C.fieldBorder}`, color: C.text, fontFamily: mono ? MONO : SANS, fontSize: 13, fontWeight: 500, transition: "border-color .15s, background .15s" },
+      onFocus: (e) => {
+        e.target.style.borderColor = C.accent;
+        e.target.style.background = "#192434";
+      },
+      onBlur: (e) => {
+        e.target.style.borderColor = C.fieldBorder;
+        e.target.style.background = C.field;
+      }
+    }
+  );
+  function ContainerGlyph({ length, on }) {
+    const steel = on ? "#8fc8ff" : "#5a6a7e";
+    const line = on ? C.accent : "#3a4a5e";
+    const W = 120, H = 44, bx = 3, by = 5, bh = H - 14, bw = W - 6, doorW = 18, bodyW = bw - doorW;
+    const ridges = Math.max(6, Math.round(length / 60));
+    const rl = [];
+    for (let k = 1; k < ridges; k++) {
+      const x = bx + bodyW * k / ridges;
+      rl.push(/* @__PURE__ */ React.createElement("line", { key: k, x1: x, y1: by + 3, x2: x, y2: by + bh - 3, stroke: line, strokeOpacity: on ? 0.5 : 0.32, strokeWidth: "1" }));
+    }
+    const cc = (a, b) => /* @__PURE__ */ React.createElement("rect", { x: a, y: b, width: "4.5", height: "4.5", rx: "1", fill: steel });
+    return /* @__PURE__ */ React.createElement("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", style: { display: "block" } }, /* @__PURE__ */ React.createElement("rect", { x: bx, y: by, width: bodyW, height: bh / 2, fill: on ? "#15334e" : "#141b24" }), /* @__PURE__ */ React.createElement("rect", { x: bx, y: by + bh / 2, width: bodyW, height: bh / 2, fill: on ? "#0e2438" : "#0f1620" }), /* @__PURE__ */ React.createElement("rect", { x: bx, y: by, width: bodyW, height: bh, fill: "none", stroke: steel, strokeWidth: "1.3" }), rl, /* @__PURE__ */ React.createElement("rect", { x: bx + bodyW, y: by, width: doorW, height: bh, fill: on ? "#0b1f33" : "#0d141d", stroke: steel, strokeWidth: "1.3" }), /* @__PURE__ */ React.createElement("line", { x1: bx + bodyW + doorW * 0.4, y1: by + 3, x2: bx + bodyW + doorW * 0.4, y2: by + bh - 3, stroke: line, strokeWidth: "1" }), /* @__PURE__ */ React.createElement("line", { x1: bx + bodyW + doorW * 0.66, y1: by + 3, x2: bx + bodyW + doorW * 0.66, y2: by + bh - 3, stroke: line, strokeWidth: "1" }), cc(bx - 1, by - 1), cc(bx + bw - 3.5, by - 1), cc(bx - 1, by + bh - 3.5), cc(bx + bw - 3.5, by + bh - 3.5));
+  }
+  function Gauge({ value, color }) {
+    const r = 33, circ = 2 * Math.PI * r, off = circ * (1 - Math.min(100, Math.max(0, value)) / 100);
+    return /* @__PURE__ */ React.createElement("svg", { viewBox: "0 0 82 82", width: "74", height: "74" }, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("linearGradient", { id: "gg", x1: "0", y1: "0", x2: "1", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0", stopColor: color }), /* @__PURE__ */ React.createElement("stop", { offset: "1", stopColor: C.teal }))), /* @__PURE__ */ React.createElement("circle", { cx: "41", cy: "41", r, fill: "none", stroke: "#1a2434", strokeWidth: "6.5" }), /* @__PURE__ */ React.createElement("circle", { cx: "41", cy: "41", r, fill: "none", stroke: "url(#gg)", strokeWidth: "6.5", strokeLinecap: "round", strokeDasharray: circ, strokeDashoffset: off, transform: "rotate(-90 41 41)", style: { transition: "stroke-dashoffset .65s cubic-bezier(.4,0,.2,1)" } }), /* @__PURE__ */ React.createElement("text", { x: "41", y: "39", textAnchor: "middle", style: { fontFamily: MONO, fontSize: 18, fontWeight: 700, fill: C.text } }, Math.round(value)), /* @__PURE__ */ React.createElement("text", { x: "41", y: "52", textAnchor: "middle", style: { fontFamily: MONO, fontSize: 8, fill: C.faint } }, T.gaugeSub));
+  }
+  var Meter = ({ label, pct, color, text, over }) => {
+    const c = over ? C.bad : color;
+    const w = Math.max(0, Math.min(100, pct));
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "flex justify-between mb-1", style: { fontFamily: MONO, fontSize: 9.5 } }, /* @__PURE__ */ React.createElement("span", { style: { letterSpacing: "0.12em", textTransform: "uppercase", color: C.dim } }, label), /* @__PURE__ */ React.createElement("span", { style: { color: c, fontWeight: 600 } }, text, over ? " \xB7 zu schwer" : "")), /* @__PURE__ */ React.createElement("div", { className: "rounded-full overflow-hidden", style: { height: 6, background: "#101723", border: "1px solid #18212e" } }, /* @__PURE__ */ React.createElement("div", { className: "rounded-full", style: { height: "100%", width: `${w}%`, background: over ? C.bad : `linear-gradient(90deg, ${hexA(c, 0.65)}, ${c})`, boxShadow: `0 0 10px ${hexA(c, 0.55)}`, transition: "width .55s cubic-bezier(.4,0,.2,1)" } })));
+  };
+  function App() {
+    const INIT_CARGO = SHARED ? SHARED.cargo : QIMPORT || [{ id: uid(), name: "Packst\xFCck", l: 120, w: 80, h: 110, weight: 300, qty: 1, stackable: true, rotatable: true }];
+    const INIT_CONTAINER = SHARED ? SHARED.container : { ...PRESETS["20' GP"] };
+    const [preset, setPreset] = useState(SHARED ? SHARED.preset : "20' GP");
+    const [container, setContainer] = useState(INIT_CONTAINER);
+    const [cargo, setCargo] = useState(INIT_CARGO);
+    const [importOpen, setImportOpen] = useState(false);
+    const [importText, setImportText] = useState("");
+    const [importRows, setImportRows] = useState(null);
+    const [shareOpen, setShareOpen] = useState(false);
+    const [shareURL, setShareURL] = useState("");
+    const [shareCopied, setShareCopied] = useState(false);
+    const [result, setResult] = useState(() => packCargo(INIT_CONTAINER, INIT_CARGO));
+    const [toast, setToast] = useState("");
+    useEffect(() => {
+      const t = setTimeout(() => {
+        const r = packCargo(container, cargo);
+        if (r.boxes < r.totalBoxes && r.totalBoxes > 0 && !r.rotHintAll) r.suggestion = suggestContainer(cargo);
+        setResult(r);
+      }, 200);
+      return () => clearTimeout(t);
+    }, [container, cargo]);
+    useEffect(() => {
+      if (!toast) return;
+      const t = setTimeout(() => setToast(""), 2600);
+      return () => clearTimeout(t);
+    }, [toast]);
+    useEffect(() => {
+      try {
+        window.localStorage.setItem("cl_lang", LANG);
+      } catch (e) {
+      }
+    }, []);
+    const setCont = (k, v) => {
+      setContainer((c) => ({ ...c, [k]: v }));
+      setPreset("Custom");
+    };
+    const applyPreset = (p) => {
+      setPreset(p);
+      if (PRESETS[p]) setContainer({ ...PRESETS[p] });
+    };
+    const upd = (id, k, v) => setCargo((cs) => cs.map((c) => c.id === id ? { ...c, [k]: v } : c));
+    const addCargo = () => setCargo((cs) => [...cs, { id: uid(), name: "Packst\xFCck", l: 120, w: 80, h: 110, weight: 300, qty: 1, stackable: true, rotatable: true }]);
+    const del = (id) => setCargo((cs) => cs.filter((c) => c.id !== id));
+    const enableAllRotate = () => setCargo((cs) => cs.map((c) => ({ ...c, rotatable: true })));
+    const updImportRow = (i, k, v) => setImportRows((rs) => rs.map((r, j) => j === i ? { ...r, [k]: v } : r));
+    const delImportRow = (i) => setImportRows((rs) => rs.filter((_, j) => j !== i));
+    const applyImport = (replace) => {
+      const items = (importRows || []).map((r) => ({ id: uid(), name: r.name || "Position", l: Math.max(1, num(r.l, 1)), w: Math.max(1, num(r.w, 1)), h: Math.max(1, num(r.h, 1)), weight: Math.max(0, num(r.weight, 0)), qty: Math.max(1, parseInt(r.qty, 10) || 1), stackable: r.stackable !== false, rotatable: r.rotatable !== false }));
+      if (!items.length) return;
+      setCargo((cs) => replace ? items : [...cs, ...items]);
+      setImportOpen(false);
+      setImportRows(null);
+      setImportText("");
+      setToast(T.impApplied(items.length));
+    };
+    const doShare = () => {
+      const url = encodePlanURL(preset, container, cargo);
+      setShareURL(url);
+      setShareCopied(false);
+      setShareOpen(true);
+      try {
+        navigator.clipboard.writeText(url).then(() => setShareCopied(true), () => {
+        });
+      } catch (e) {
+      }
+    };
+    const unplaced = result.totalBoxes - result.boxes;
+    const allFit = unplaced <= 0 && result.totalBoxes > 0;
+    const utilColor = result.util > 80 ? C.good : result.util > 55 ? C.accent : result.util > 30 ? C.warn : C.bad;
+    const payPct = num(container.payload) > 0 ? result.weight / num(container.payload) * 100 : 0;
+    const payColor = payPct > 100 ? C.bad : payPct > 90 ? C.warn : C.good;
+    const sug = result.suggestion;
+    const doorOpening = container.door && preset !== "Custom" ? container.door : { w: num(container.w), h: num(container.h) };
+    const doorFails = cargo.filter((it) => !fitsThroughDoor(it, doorOpening));
+    const buildLadevorschlag = () => {
+      try {
+        const items = cargo.filter((c) => num(c.qty, 0) > 0);
+        if (!items.length) {
+          setToast(LANG === "en" ? "Add cargo first" : "Erst Packst\xFCcke hinzuf\xFCgen");
+          return;
+        }
+        const colli = items.reduce((a, c) => a + Math.max(0, num(c.qty, 0)), 0);
+        const totVol = items.reduce((a, c) => a + num(c.qty, 0) * num(c.l) * num(c.w) * num(c.h) / 1e6, 0);
+        const totWt = items.reduce((a, c) => a + num(c.qty, 0) * num(c.weight, 0), 0);
+        const cVol = num(container.l) * num(container.w) * num(container.h) / 1e6;
+        const pay = num(container.payload, 0);
+        const volPct = cVol > 0 ? totVol / cVol * 100 : 0;
+        const wtPct = pay > 0 ? totWt / pay * 100 : 0;
+        const pl = preset === "Custom" ? "Eigene Ma\xDFe" : preset;
+        let passtin, passtsub;
+        if (allFit) {
+          passtin = "1\xD7 " + pl;
+          passtsub = "geometrisch gepr\xFCft";
+        } else if (sug && sug.type === "single") {
+          passtin = "1\xD7 " + sug.name;
+          passtsub = "empfohlen";
+        } else if (sug && sug.type === "multi" && sug.combo && sug.combo.length) {
+          passtin = sug.combo.map((c) => c.count + "\xD7 " + c.name).join(" + ");
+          passtsub = "Empfehlung";
+        } else if (sug && sug.type === "toobig") {
+          passtin = "\u2014";
+          passtsub = "Position zu gro\xDF";
+        } else {
+          passtin = "1\xD7 " + pl;
+          passtsub = "geometrisch gepr\xFCft";
+        }
+        const now = /* @__PURE__ */ new Date();
+        const p2 = (n) => String(n).padStart(2, "0");
+        const datum = `${p2(now.getDate())}.${p2(now.getMonth() + 1)}.${now.getFullYear()}`;
+        const ref = `CL-${String(now.getFullYear()).slice(2)}${p2(now.getMonth() + 1)}${p2(now.getDate())}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+        const qr = makeQR(encodePlanURL(preset, container, cargo));
+        const pageHTML = LV_PAGE({
+          REF: ref,
+          DATUM: datum,
+          CONTAINER_LABEL: "1\xD7 " + pl,
+          INNENMASS: `${num(container.l)} \xD7 ${num(container.w)} \xD7 ${num(container.h)} cm`,
+          PAYLOAD: pay > 0 ? fmtDE(pay) : "\u2014",
+          POSCOUNT: items.length,
+          COLLI: colli,
+          VOL: fmt1DE(totVol),
+          VOLBAR: Math.min(100, Math.round(volPct)),
+          VOLPCT: Math.round(volPct),
+          WEIGHT: fmtDE(totWt),
+          WTBAR: Math.min(100, Math.round(wtPct)),
+          WTPCT: Math.round(wtPct),
+          PASSTIN: escHTML(passtin),
+          PASSTSUB: escHTML(passtsub),
+          ROWS: items.map(LV_ROW).join(""),
+          SUMQTY: colli,
+          SUMKG: fmtDE(totWt),
+          SUMVOL: fmt1DE(totVol),
+          QR: qr
+        });
+        const w = window.open("", "_blank");
+        if (!w) {
+          setToast(LANG === "en" ? "Please allow pop-ups" : "Bitte Pop-ups erlauben");
+          return;
+        }
+        w.document.open();
+        w.document.write(LV_DOC(pageHTML));
+        w.document.close();
+      } catch (e) {
+        setToast(LANG === "en" ? "Export failed" : "Export fehlgeschlagen");
+      }
+    };
+    return /* @__PURE__ */ React.createElement("div", { className: "w-full min-h-screen flex flex-col", style: { fontFamily: SANS, color: C.text, background: "radial-gradient(1300px 700px at 85% -10%, #0d1726 0%, #070a0f 60%)" } }, /* @__PURE__ */ React.createElement("style", null, `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+        @keyframes clrise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+        .clrise{animation:clrise .4s cubic-bezier(.4,0,.2,1) both}
+        @keyframes clspin{to{transform:rotate(360deg)}}
+        @keyframes clload{0%{transform:scaleY(0)}100%{transform:scaleY(1)}}
+        @keyframes clload2{0%{transform:scaleY(0)}100%{transform:scaleY(1)}}
+        .cl-bar{transform-box:fill-box;transform-origin:50% 100%;animation:clload .5s cubic-bezier(.2,.8,.2,1) both}
+        .cl-bar.b2{animation-delay:.13s}.cl-bar.b3{animation-delay:.26s}
+        .brandlogo:hover .cl-bar{animation-name:clload2}`), /* @__PURE__ */ React.createElement("header", { className: "flex items-center justify-between px-5 py-3 relative", style: { borderBottom: "1px solid #141c27" } }, /* @__PURE__ */ React.createElement("div", { className: "absolute bottom-0 left-0 h-px w-2/5", style: { background: `linear-gradient(90deg, ${C.accent}, transparent)` } }), /* @__PURE__ */ React.createElement("a", { href: EMBEDDED ? void 0 : homeHref, className: "brandlogo flex items-center gap-2.5", style: EMBEDDED ? void 0 : { cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { className: "w-8 h-8 rounded-lg flex items-center justify-center", style: { background: `linear-gradient(135deg, ${C.accent}, ${C.teal})`, boxShadow: `0 4px 16px -4px ${hexA(C.accent, 0.7)}` } }, /* @__PURE__ */ React.createElement("svg", { width: "18", height: "18", viewBox: "0 0 24 24" }, /* @__PURE__ */ React.createElement("rect", { x: "3", y: "7", width: "18", height: "11", rx: "1.5", fill: "none", stroke: "#04101f", strokeWidth: "2" }), /* @__PURE__ */ React.createElement("rect", { className: "cl-bar b1", x: "5", y: "9.3", width: "2.3", height: "6.4", rx: "0.5", fill: "#04101f" }), /* @__PURE__ */ React.createElement("rect", { className: "cl-bar b2", x: "7.9", y: "9.3", width: "2.3", height: "6.4", rx: "0.5", fill: "#04101f" }), /* @__PURE__ */ React.createElement("rect", { className: "cl-bar b3", x: "10.8", y: "9.3", width: "2.3", height: "6.4", rx: "0.5", fill: "#04101f" }))), /* @__PURE__ */ React.createElement("div", { className: "leading-none" }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, letterSpacing: "-0.02em" } }, "Container", /* @__PURE__ */ React.createElement("span", { style: { background: `linear-gradient(90deg, ${C.accent}, ${C.teal})`, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" } }, "Load")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 8.5, letterSpacing: "0.22em", textTransform: "uppercase", color: C.faint, marginTop: 3 } }, T.sub))), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2" }, !EMBEDDED && /* @__PURE__ */ React.createElement("a", { href: homeHref, title: T.backToSite, className: "flex items-center gap-1 px-2.5 py-1 rounded-md transition hover:brightness-125", style: { fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.1em", color: C.dim, border: "1px solid #1c2735" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, lineHeight: 1 } }, "\u2190"), T.backToSite), /* @__PURE__ */ React.createElement("button", { onClick: doShare, title: T.shareTitle, className: "flex items-center gap-1 px-2.5 py-1 rounded-md transition hover:brightness-125", style: { fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.1em", color: "#bcd9ff", background: hexA(C.accent, 0.12), border: `1px solid ${hexA(C.accent, 0.32)}` } }, /* @__PURE__ */ React.createElement("svg", { width: "11", height: "11", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.4", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "5", r: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "6", cy: "12", r: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "19", r: "3" }), /* @__PURE__ */ React.createElement("path", { d: "M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" })), T.shareBtn), /* @__PURE__ */ React.createElement("button", { onClick: buildLadevorschlag, title: T.pdfTitle, className: "flex items-center gap-1 px-2.5 py-1 rounded-md transition hover:brightness-125", style: { fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.1em", color: C.dim, border: "1px solid #1c2735" } }, /* @__PURE__ */ React.createElement("svg", { width: "11", height: "11", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }), /* @__PURE__ */ React.createElement("path", { d: "M14 2v6h6" }), /* @__PURE__ */ React.createElement("path", { d: "M8 13h8M8 17h6" })), T.pdfBtn), /* @__PURE__ */ React.createElement("span", { className: "hidden sm:inline px-2.5 py-1 rounded-md", style: { fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint, border: "1px solid #1c2735" } }, "ISO 668"))), /* @__PURE__ */ React.createElement("div", { className: "flex flex-col lg:flex-row flex-1 min-h-0" }, /* @__PURE__ */ React.createElement("aside", { className: "w-full lg:w-[384px] lg:flex-shrink-0 overflow-y-auto", style: { borderRight: "1px solid #141c27", maxHeight: "100vh" } }, /* @__PURE__ */ React.createElement("div", { className: "p-5", style: { borderBottom: "1px solid #121925" } }, /* @__PURE__ */ React.createElement(SectionTitle, null, T.container), /* @__PURE__ */ React.createElement("div", { className: "flex gap-2 overflow-x-auto pb-1.5 -mx-1 px-1" }, Object.keys(PRESETS).map((p) => {
+      const on = preset === p;
+      const vol = PRESETS[p].l * PRESETS[p].w * PRESETS[p].h / 1e6;
+      return /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          key: p,
+          onClick: () => applyPreset(p),
+          className: "flex-shrink-0 flex items-center gap-2 rounded-xl pl-1.5 pr-3 py-1.5 transition-all duration-200",
+          title: META[p],
+          style: { background: on ? hexA(C.accent, 0.12) : "#0f1622", border: `1px solid ${on ? hexA(C.accent, 0.75) : "#1d2734"}`, boxShadow: on ? `0 6px 18px -8px ${hexA(C.accent, 0.6)}` : "none" }
+        },
+        /* @__PURE__ */ React.createElement("div", { style: { width: 44 } }, /* @__PURE__ */ React.createElement(ContainerGlyph, { length: PRESETS[p].l, on })),
+        /* @__PURE__ */ React.createElement("div", { className: "leading-tight text-left" }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11.5, fontWeight: 700, color: on ? "#d6e9ff" : "#c6d2e0" } }, p), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 8.5, color: on ? "#6fb0ee" : C.faint } }, vol.toFixed(1), " m\xB3"))
+      );
+    }), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        onClick: () => setPreset("Custom"),
+        className: "flex-shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition-all duration-200",
+        style: { background: preset === "Custom" ? hexA(C.accent, 0.12) : "#0f1622", border: `1px solid ${preset === "Custom" ? hexA(C.accent, 0.75) : "#1d2734"}`, borderStyle: preset === "Custom" ? "solid" : "dashed" }
+      },
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: preset === "Custom" ? "#9ecbff" : C.faint } }, "\u2699"),
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11.5, fontWeight: 700, color: preset === "Custom" ? "#d6e9ff" : C.dim } }, "Custom")
+    )), /* @__PURE__ */ React.createElement("div", { className: "rounded-xl p-3 mt-2.5", style: { background: "#0a0e16", border: "1px solid #1a2330" } }, /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-3 gap-2 mb-2.5" }, [["l", T.len], ["w", T.wid], ["h", T.hei]].map(([k, lbl]) => /* @__PURE__ */ React.createElement("div", { key: k }, /* @__PURE__ */ React.createElement(Label, null, lbl), /* @__PURE__ */ React.createElement(Num, { value: container[k], onChange: (v) => setCont(k, v) })))))), /* @__PURE__ */ React.createElement("div", { className: "p-5" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 mb-3" }, /* @__PURE__ */ React.createElement(SectionTitle, { noMargin: true }, T.cargo), /* @__PURE__ */ React.createElement("span", { className: "h-px flex-1", style: { background: "linear-gradient(90deg,#1d2734,transparent)" } }), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+      setImportText("");
+      setImportRows(null);
+      setImportOpen(true);
+    }, className: "px-2.5 py-1 rounded-lg transition hover:brightness-110 flex items-center gap-1", style: { background: hexA(C.teal, 0.1), border: `1px solid ${hexA(C.teal, 0.32)}`, fontSize: 11, fontWeight: 700, color: "#a9eee0" } }, "\u26A1 ", T.impBtn), /* @__PURE__ */ React.createElement("button", { onClick: addCargo, className: "px-2.5 py-1 rounded-lg transition hover:brightness-110", style: { background: hexA(C.accent, 0.1), border: `1px solid ${hexA(C.accent, 0.35)}`, fontSize: 11, fontWeight: 700, color: "#bcd9ff" } }, T.addItem)), /* @__PURE__ */ React.createElement("div", { className: "flex flex-col gap-3" }, cargo.map((c, i) => {
+      const pt = result.perType[i];
+      const done = pt && pt.total > 0 && pt.loaded >= pt.total;
+      const col = TYPE_COLORS[i % TYPE_COLORS.length];
+      return /* @__PURE__ */ React.createElement("div", { key: c.id, className: "rounded-2xl p-3.5", style: { background: "#0c111a", border: "1px solid #1a2330" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2.5 mb-3" }, /* @__PURE__ */ React.createElement("span", { style: { width: 10, height: 10, borderRadius: 3, background: col, boxShadow: `0 0 9px ${hexA(col, 0.6)}`, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("input", { value: c.name, onChange: (e) => upd(c.id, "name", e.target.value), className: "flex-1 min-w-0 bg-transparent focus:outline-none", style: { fontSize: 13.5, fontWeight: 600, color: C.text, borderBottom: "1px solid transparent", paddingBottom: 2 }, onFocus: (e) => e.target.style.borderBottomColor = hexA(C.accent, 0.6), onBlur: (e) => e.target.style.borderBottomColor = "transparent" }), pt && /* @__PURE__ */ React.createElement("span", { className: "px-2 py-0.5 rounded-full whitespace-nowrap", style: { fontFamily: MONO, fontSize: 10.5, fontWeight: 600, background: hexA(done ? C.good : C.warn, 0.14), color: done ? C.good : C.warn } }, pt.loaded, "/", pt.total), !fitsThroughDoor(c, doorOpening) && /* @__PURE__ */ React.createElement("span", { title: T.doorHint(doorOpening.w, doorOpening.h), className: "px-2 py-0.5 rounded-full whitespace-nowrap", style: { fontFamily: MONO, fontSize: 10, fontWeight: 600, background: hexA(C.warn, 0.16), color: C.warn } }, "\u{1F6AA} ", T.doorChip), cargo.length > 1 && /* @__PURE__ */ React.createElement("button", { onClick: () => del(c.id), style: { color: C.faint, fontSize: 16, lineHeight: 1 }, onMouseOver: (e) => e.target.style.color = C.bad, onMouseOut: (e) => e.target.style.color = C.faint }, "\xD7")), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-2.5 mb-3" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(Label, null, T.qty), /* @__PURE__ */ React.createElement("div", { className: "flex items-stretch rounded-lg overflow-hidden", style: { background: C.field, border: `1px solid ${C.fieldBorder}` } }, /* @__PURE__ */ React.createElement("button", { onClick: () => upd(c.id, "qty", Math.max(0, Math.floor(num(c.qty)) - 1)), style: { width: 32, color: C.dim, fontSize: 16 } }, "\u2212"), /* @__PURE__ */ React.createElement("input", { type: "number", value: c.qty, onChange: (e) => upd(c.id, "qty", e.target.value === "" ? "" : Number(e.target.value)), className: "w-full min-w-0 text-center bg-transparent focus:outline-none", style: { fontFamily: MONO, fontSize: 13, fontWeight: 600, color: C.text, borderLeft: `1px solid ${C.fieldBorder}`, borderRight: `1px solid ${C.fieldBorder}`, padding: "8px 0" } }), /* @__PURE__ */ React.createElement("button", { onClick: () => upd(c.id, "qty", Math.max(0, Math.floor(num(c.qty)) + 1)), style: { width: 32, color: C.dim, fontSize: 16 } }, "+"))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(Label, null, T.weightPer), /* @__PURE__ */ React.createElement(Num, { value: c.weight, onChange: (v) => upd(c.id, "weight", v) }))), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-3 gap-2 mb-1" }, [["l", T.len], ["w", T.wid], ["h", T.hei]].map(([k, lbl]) => /* @__PURE__ */ React.createElement("div", { key: k }, /* @__PURE__ */ React.createElement(Label, null, lbl), /* @__PURE__ */ React.createElement(Num, { value: c[k], onChange: (v) => upd(c.id, k, v) })))), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 9, color: C.faint } }, T.dimHint), /* @__PURE__ */ React.createElement("div", { className: "flex items-end gap-2 mt-3" }, /* @__PURE__ */ React.createElement("div", { className: "flex-1" }, /* @__PURE__ */ React.createElement(Label, null, T.stack), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-1" }, [{ v: true, t: T.stackable, c: C.good }, { v: false, t: T.notStackable, c: C.warn }].map((o) => {
+        const on = c.stackable !== false === o.v;
+        return /* @__PURE__ */ React.createElement("button", { key: String(o.v), onClick: () => upd(c.id, "stackable", o.v), className: "py-1.5 rounded-lg transition", style: { fontSize: 10.5, fontWeight: on ? 600 : 500, background: on ? hexA(o.c, 0.15) : "#101824", border: `1px solid ${on ? hexA(o.c, 0.6) : "#222d3c"}`, color: on ? o.c : C.dim } }, on ? "\u2713 " : "", o.t);
+      }))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(Label, null, T.rotate), (() => {
+        const on = c.rotatable !== false;
+        return /* @__PURE__ */ React.createElement("button", { onClick: () => upd(c.id, "rotatable", !on), className: "rounded-lg transition flex items-center gap-1", style: { height: 31, padding: "0 12px", fontSize: 10.5, fontWeight: on ? 600 : 500, background: on ? hexA(C.accent, 0.15) : "#101824", border: `1px solid ${on ? hexA(C.accent, 0.6) : "#222d3c"}`, color: on ? C.accent : C.dim } }, "\u21BB 90\xB0");
+      })())));
+    })))), /* @__PURE__ */ React.createElement("main", { className: "flex-1 min-h-0 flex flex-col" }, /* @__PURE__ */ React.createElement("div", { className: "relative flex-1 min-h-[380px]" }, /* @__PURE__ */ React.createElement(Viewport, { container, result }), doorFails.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "absolute top-4 left-1/2 clrise", style: { transform: "translateX(-50%)", zIndex: 6 } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 rounded-xl px-3.5 py-2", style: { background: hexA("#1a0f08", 0.9), border: `1px solid ${hexA(C.warn, 0.55)}`, backdropFilter: "blur(10px)", boxShadow: "0 10px 30px -10px rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14 } }, "\u{1F6AA}"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11.5, lineHeight: 1.3, color: "#ffd9a8", maxWidth: 250 } }, T.doorWarn(doorFails.length), " \xB7 ", T.doorHint(doorOpening.w, doorOpening.h)))), /* @__PURE__ */ React.createElement("div", { className: "absolute top-4 left-4 clrise", style: { pointerEvents: "none" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3 rounded-2xl p-3 pr-4", style: { background: hexA("#0a0f18", 0.72), border: "1px solid #1e2a3a", backdropFilter: "blur(10px)", boxShadow: "0 10px 40px -12px rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement(Gauge, { value: result.util, color: utilColor }), /* @__PURE__ */ React.createElement("div", { className: "leading-tight" }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.12em", textTransform: "uppercase", color: C.dim } }, T.loaded), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 22, fontWeight: 700, color: allFit ? C.good : C.text } }, result.boxes, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: C.faint } }, " / ", result.totalBoxes)), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1.5 mt-1", style: { fontSize: 11.5, fontWeight: 600, color: allFit ? C.good : C.warn } }, /* @__PURE__ */ React.createElement("span", null, allFit ? "\u2713" : "\u26A0"), /* @__PURE__ */ React.createElement("span", null, allFit ? T.allLoaded : T.open(unplaced)))))), unplaced > 0 && /* @__PURE__ */ React.createElement("div", { className: "absolute bottom-4 left-4 right-4 flex justify-center clrise", style: { pointerEvents: "none" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3 rounded-2xl px-4 py-2.5 max-w-[560px]", style: { pointerEvents: "auto", background: hexA("#0a0f18", 0.82), border: `1px solid ${hexA(result.rotHintAll || sug && sug.type === "single" ? C.accent : C.warn, 0.5)}`, backdropFilter: "blur(10px)", boxShadow: "0 10px 40px -12px rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, result.rotHintAll ? "\u21BB" : "\u{1F4E6}"), /* @__PURE__ */ React.createElement("div", { className: "flex-1", style: { fontSize: 12.5, lineHeight: 1.35, color: "#d4dce5" } }, result.rotHintAll && T.recRot(preset), !result.rotHintAll && sug && sug.type === "single" && T.recSingle(sug.name), !result.rotHintAll && sug && sug.type === "multi" && T.recMulti(sug.combo.map((x) => `${x.count}\xD7 ${x.name}`).join(" + ")), !result.rotHintAll && sug && sug.type === "toobig" && T.recTooBig(sug.item), !result.rotHintAll && !sug && T.recNoFit(unplaced)), result.rotHintAll && /* @__PURE__ */ React.createElement("button", { onClick: enableAllRotate, className: "px-3 py-1.5 rounded-lg whitespace-nowrap transition hover:brightness-110", style: { background: `linear-gradient(90deg,${C.accent},${C.teal})`, color: "#04101f", fontSize: 12, fontWeight: 700 } }, T.rotOn), !result.rotHintAll && sug && sug.type === "single" && /* @__PURE__ */ React.createElement("button", { onClick: () => applyPreset(sug.name), className: "px-3 py-1.5 rounded-lg whitespace-nowrap transition hover:brightness-110", style: { background: `linear-gradient(90deg,${C.accent},${C.teal})`, color: "#04101f", fontSize: 12, fontWeight: 700 } }, T.apply)))), /* @__PURE__ */ React.createElement("div", { style: { borderTop: "1px solid #141c27", background: hexA("#080c12", 0.7) } }, /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 sm:grid-cols-4" }, /* @__PURE__ */ React.createElement(Stat, { label: T.loaded, value: `${result.boxes}`, sub: `/ ${result.totalBoxes}`, accent: allFit ? C.good : C.warn }), /* @__PURE__ */ React.createElement(Stat, { label: T.volume, value: result.usedVol.toFixed(1), sub: `/ ${result.contVol.toFixed(1)} m\xB3`, accent: "#9ecbff" }), /* @__PURE__ */ React.createElement(Stat, { label: T.weight, value: `${Math.round(result.weight)}`, sub: num(container.payload) > 0 ? `/ ${num(container.payload)} kg` : "kg", accent: payColor }), /* @__PURE__ */ React.createElement(Stat, { label: T.layers, value: `${result.single ? result.layers : Math.max(1, result.layers) || 0}`, sub: result.single ? T.stacked : T.mixed, accent: C.teal })), /* @__PURE__ */ React.createElement("div", { className: "px-5 py-3 space-y-2.5", style: { borderTop: "1px solid #121925" } }, /* @__PURE__ */ React.createElement(Meter, { label: T.volUtil, pct: result.util, color: utilColor, text: `${result.util.toFixed(0)}%` }), num(container.payload) > 0 && /* @__PURE__ */ React.createElement(Meter, { label: T.payloadUtil, pct: Math.min(payPct, 100), color: payColor, text: `${payPct.toFixed(0)}%`, over: payPct > 100 }))))), /* @__PURE__ */ React.createElement("footer", { className: "px-5 py-2.5 flex items-center justify-between", style: { borderTop: "1px solid #121925", fontFamily: MONO, fontSize: 9.5, color: C.faint, letterSpacing: "0.08em" } }, /* @__PURE__ */ React.createElement("span", null, T.footL), /* @__PURE__ */ React.createElement("span", null, T.footR)), shareOpen && /* @__PURE__ */ React.createElement("div", { className: "fixed inset-0 flex items-center justify-center p-4", style: { zIndex: 60, background: "rgba(4,8,14,0.74)", backdropFilter: "blur(4px)" }, onClick: () => setShareOpen(false) }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), className: "w-full clrise", style: { maxWidth: 520, background: "#0c1320", borderRadius: 18, border: `1px solid ${C.fieldBorder}`, boxShadow: "0 30px 80px -20px rgba(0,0,0,0.85)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 px-5 py-3.5", style: { borderBottom: "1px solid #1a2536" } }, /* @__PURE__ */ React.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: C.accent, strokeWidth: "2.4", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "5", r: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "6", cy: "12", r: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "19", r: "3" }), /* @__PURE__ */ React.createElement("path", { d: "M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" })), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700, fontSize: 15 } }, T.shareTitle), /* @__PURE__ */ React.createElement("button", { onClick: () => setShareOpen(false), className: "ml-auto w-7 h-7 rounded-lg flex items-center justify-center transition hover:brightness-125", style: { background: "#131c2b", border: "1px solid #283649", color: C.dim, fontSize: 16, lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { className: "p-5" }, /* @__PURE__ */ React.createElement("div", { style: { color: C.dim, fontSize: 13, lineHeight: 1.5, marginBottom: 12 } }, T.shareDesc), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ React.createElement("input", { readOnly: true, value: shareURL, onFocus: (e) => e.target.select(), className: "flex-1 rounded-lg px-3 py-2.5", style: { background: C.field, border: `1px solid ${C.fieldBorder}`, color: C.text, fontSize: 12, fontFamily: MONO, outline: "none" } }), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+      try {
+        navigator.clipboard.writeText(shareURL).then(() => setShareCopied(true), () => {
+        });
+      } catch (e) {
+      }
+    }, className: "px-4 py-2.5 rounded-lg transition hover:brightness-110", style: { background: `linear-gradient(135deg, ${C.accent}, ${C.teal})`, color: "#04101f", fontWeight: 700, fontSize: 13, whiteSpace: "nowrap" } }, shareCopied ? T.shareCopied : T.shareCopy)), /* @__PURE__ */ React.createElement("a", { href: shareURL, target: "_blank", rel: "noopener", className: "inline-block mt-3 transition hover:brightness-125", style: { fontFamily: MONO, fontSize: 11, color: C.accent } }, T.shareOpen), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+      setShareOpen(false);
+      buildLadevorschlag();
+    }, className: "w-full mt-4 px-4 py-2.5 rounded-lg transition hover:brightness-110 flex items-center justify-center gap-2", style: { background: C.field, border: `1px solid ${C.fieldBorder}`, color: C.text, fontWeight: 600, fontSize: 13 } }, /* @__PURE__ */ React.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }), /* @__PURE__ */ React.createElement("path", { d: "M14 2v6h6" })), T.pdfBtn, " (PDF)")))), importOpen && /* @__PURE__ */ React.createElement("div", { className: "fixed inset-0 flex items-center justify-center p-4", style: { zIndex: 60, background: "rgba(4,8,14,0.74)", backdropFilter: "blur(4px)" }, onClick: () => setImportOpen(false) }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), className: "w-full clrise", style: { maxWidth: 560, background: "#0c1320", borderRadius: 18, border: `1px solid ${C.fieldBorder}`, boxShadow: "0 30px 80px -20px rgba(0,0,0,0.85)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 px-5 py-3.5", style: { borderBottom: "1px solid #1a2536" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15 } }, "\u26A1"), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700, fontSize: 15 } }, T.impTitle), /* @__PURE__ */ React.createElement("button", { onClick: () => setImportOpen(false), className: "ml-auto w-7 h-7 rounded-lg flex items-center justify-center transition hover:brightness-125", style: { background: "#131c2b", border: "1px solid #283649", color: C.dim, fontSize: 16, lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { className: "p-5" }, importRows === null ? /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("textarea", { value: importText, onChange: (e) => setImportText(e.target.value), placeholder: T.impPh, rows: 6, className: "w-full rounded-xl p-3", style: { background: C.field, border: `1px solid ${C.fieldBorder}`, color: C.text, fontSize: 13, fontFamily: MONO, resize: "vertical", outline: "none" } }), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 mt-3" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setImportRows(parseCargoText(importText)), disabled: !importText.trim(), className: "px-4 py-2 rounded-lg transition hover:brightness-110", style: { background: importText.trim() ? `linear-gradient(135deg, ${C.accent}, ${C.teal})` : "#1a2433", color: importText.trim() ? "#04101f" : C.faint, fontWeight: 700, fontSize: 13, cursor: importText.trim() ? "pointer" : "default" } }, T.impDetect), /* @__PURE__ */ React.createElement("button", { onClick: () => setImportOpen(false), className: "px-4 py-2 rounded-lg transition hover:brightness-110", style: { background: "#131c2b", border: "1px solid #283649", color: C.dim, fontWeight: 600, fontSize: 13 } }, T.impCancel))) : importRows.length === 0 ? /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { color: C.dim, fontSize: 13, lineHeight: 1.5 } }, T.impNone), /* @__PURE__ */ React.createElement("button", { onClick: () => setImportRows(null), className: "mt-4 px-4 py-2 rounded-lg", style: { background: "#131c2b", border: "1px solid #283649", color: C.dim, fontWeight: 600, fontSize: 13 } }, T.impBack)) : /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { color: C.dim, fontSize: 12, marginBottom: 10 } }, T.impDetected(importRows.length), " \xB7 ", /* @__PURE__ */ React.createElement("span", { style: { color: C.warn } }, T.impHint)), /* @__PURE__ */ React.createElement("div", { className: "grid items-center gap-1.5 px-1", style: { gridTemplateColumns: "1fr 1fr 1fr 1fr 1.2fr 38px 30px", fontFamily: MONO, fontSize: 8.5, letterSpacing: "0.1em", color: C.faint, textTransform: "uppercase", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", null, T.qty), /* @__PURE__ */ React.createElement("span", null, T.len[0]), /* @__PURE__ */ React.createElement("span", null, T.wid[0]), /* @__PURE__ */ React.createElement("span", null, T.hei[0]), /* @__PURE__ */ React.createElement("span", null, "kg"), /* @__PURE__ */ React.createElement("span", null, "\u21C5"), /* @__PURE__ */ React.createElement("span", null)), /* @__PURE__ */ React.createElement("div", { className: "flex flex-col gap-1.5", style: { maxHeight: 300, overflowY: "auto" } }, importRows.map((r, i) => /* @__PURE__ */ React.createElement("div", { key: i, className: "grid items-center gap-1.5", style: { gridTemplateColumns: "1fr 1fr 1fr 1fr 1.2fr 38px 30px" } }, ["qty", "l", "w", "h", "weight"].map((k) => /* @__PURE__ */ React.createElement("input", { key: k, value: r[k], onChange: (e) => updImportRow(i, k, e.target.value), className: "w-full rounded-md text-center", style: { background: C.field, border: `1px solid ${C.fieldBorder}`, color: C.text, fontSize: 12, fontFamily: MONO, padding: "5px 2px", outline: "none" } })), /* @__PURE__ */ React.createElement("button", { onClick: () => updImportRow(i, "stackable", !r.stackable), className: "rounded-md transition", style: { height: 28, background: r.stackable ? hexA(C.good, 0.16) : "#1a2433", border: `1px solid ${r.stackable ? hexA(C.good, 0.4) : "#283649"}`, color: r.stackable ? C.good : C.faint, fontSize: 12, fontWeight: 700 } }, r.stackable ? "\u2713" : "\u2715"), /* @__PURE__ */ React.createElement("button", { onClick: () => delImportRow(i), className: "rounded-md transition hover:brightness-125", style: { height: 28, background: "#1a2433", border: "1px solid #283649", color: C.faint, fontSize: 14 } }, "\xD7")))), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 mt-4" }, /* @__PURE__ */ React.createElement("button", { onClick: () => applyImport(false), className: "px-4 py-2 rounded-lg transition hover:brightness-110", style: { background: `linear-gradient(135deg, ${C.accent}, ${C.teal})`, color: "#04101f", fontWeight: 700, fontSize: 13 } }, T.impAdd), /* @__PURE__ */ React.createElement("button", { onClick: () => applyImport(true), className: "px-4 py-2 rounded-lg transition hover:brightness-110", style: { background: "#131c2b", border: "1px solid #283649", color: C.dim, fontWeight: 600, fontSize: 13 } }, T.impReplace), /* @__PURE__ */ React.createElement("button", { onClick: () => setImportRows(null), className: "ml-auto px-3 py-2 rounded-lg", style: { color: C.faint, fontSize: 13 } }, T.impBack)))))), toast && /* @__PURE__ */ React.createElement("div", { className: "fixed bottom-5 left-1/2 clrise", style: { transform: "translateX(-50%)", zIndex: 50 } }, /* @__PURE__ */ React.createElement("div", { className: "px-4 py-2.5 rounded-xl", style: { background: hexA("#0c121c", 0.95), border: `1px solid ${hexA(C.accent, 0.45)}`, color: "#cfe6ff", fontSize: 12.5, fontWeight: 600, backdropFilter: "blur(8px)", boxShadow: "0 12px 40px -10px rgba(0,0,0,0.7)" } }, toast)));
+  }
+  var SectionTitle = ({ children, noMargin }) => /* @__PURE__ */ React.createElement("div", { className: noMargin ? "" : "mb-2.5", style: { fontFamily: MONO, fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: "#8190a3" } }, children);
+  var Stat = ({ label, value, sub, accent }) => /* @__PURE__ */ React.createElement("div", { className: "px-4 py-3 relative", style: { borderRight: "1px solid #111824" } }, /* @__PURE__ */ React.createElement("span", { className: "absolute top-0 left-4 right-4", style: { height: 1, background: `linear-gradient(90deg, ${accent}, transparent)`, opacity: 0.5 } }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "#7f8da0", marginBottom: 6 } }, label), /* @__PURE__ */ React.createElement("div", { className: "flex items-baseline gap-1.5" }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 23, fontWeight: 700, color: accent, textShadow: `0 0 18px ${hexA(accent, 0.35)}` } }, value), sub && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 10.5, color: C.faint } }, sub)));
+  var _root = ReactDOM.createRoot(document.getElementById("root"));
+  _root.render(React.createElement(App));
+})();
+      } catch (e) {
+        document.getElementById("root").innerHTML =
+          '<div style="padding:24px;font-family:monospace;color:#ff5d6c">Fehler beim Laden: ' + (e && e.message ? e.message : e) + '<br><br>Bitte Internetverbindung pruefen (CDN) und neu laden.</div>';
+        console.error(e);
+      }
+    }
+    start();
+  })();
+  </script>
+<!-- Besucherzaehler: GoatCounter (kostenlos, ohne Cookies, DSGVO-freundlich) -->
+<!-- Ersetze containerload durch deinen Code von goatcounter.com (z.B. containerload) -->
+<script data-goatcounter="https://containerload.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
