@@ -376,15 +376,30 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
     const totalBoxes = cargo.reduce((s, t) => s + Math.max(0, num(t.qty)), 0);
     if (totalBoxes === 0) return null;
     const order = Object.entries(PRESETS).map(([name, p]) => ({ name, p, vol: p.l * p.w * p.h })).sort((a, b) => a.vol - b.vol);
-    for (const o of order) {
+    const absLargest = order[order.length - 1];
+    const hc40 = order.find((o) => o.name === "40' HC");
+    const hc45 = order.find((o) => o.name === "45' HC");
+    // Ehrliche Ausnahme: Der 45' HC ist in DE/EU unueblich und soll nicht der
+    // bevorzugte Standard sein. Er wird nur dann zugelassen, wenn ein einzelnes
+    // Packstueck physisch nicht in den 40' HC passt, aber in den 45' HC (z. B. Ueberlaenge).
+    let need45 = false;
+    if (hc40 && hc45) {
+      for (const t of cargo) {
+        if (num(t.qty) > 0 && packCargo(hc40.p, [{ ...t, qty: 1 }], { noHint: true, quick: true }).boxes === 0 && packCargo(hc45.p, [{ ...t, qty: 1 }], { noHint: true, quick: true }).boxes > 0) { need45 = true; break; }
+      }
+    }
+    // Standard-Arbeitsmenge: ohne 45' HC (40' HC ist der groesste Standard und das "Arbeitspferd").
+    // Nur im Ausnahmefall (need45) bleibt der 45' HC fuer Einzel- und Kombi-Empfehlung dabei.
+    const stdOrder = need45 ? order : order.filter((o) => o.name !== "45' HC");
+    const workhorse = stdOrder[stdOrder.length - 1];
+    for (const o of stdOrder) {
       const r = packCargo(o.p, cargo, { noHint: true, quick: true });
       if (r.boxes >= totalBoxes) return { type: "single", name: o.name, preset: o.p };
     }
-    const largest = order[order.length - 1];
     for (const t of cargo) {
       if (num(t.qty) > 0) {
-        const one = packCargo(largest.p, [{ ...t, qty: 1 }], { noHint: true, quick: true });
-        if (one.boxes === 0) return { type: "toobig", name: largest.name, item: t.name };
+        const one = packCargo(absLargest.p, [{ ...t, qty: 1 }], { noHint: true, quick: true });
+        if (one.boxes === 0) return { type: "toobig", name: absLargest.name, item: t.name };
       }
     }
     let remaining = cargo.map((t) => ({ ...t, qty: Math.max(0, Math.floor(num(t.qty))) }));
@@ -394,7 +409,7 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       const tot = remaining.reduce((s, t) => s + t.qty, 0);
       if (tot === 0) break;
       let fit = null;
-      for (const o of order) {
+      for (const o of stdOrder) {
         const r2 = packCargo(o.p, remaining, { noHint: true, quick: true });
         if (r2.boxes >= tot) {
           fit = o;
@@ -405,13 +420,53 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
         used[fit.name] = (used[fit.name] || 0) + 1;
         break;
       }
-      const r = packCargo(largest.p, remaining, { noHint: true, quick: true });
+      const r = packCargo(workhorse.p, remaining, { noHint: true, quick: true });
       if (r.boxes === 0) break;
-      used[largest.name] = (used[largest.name] || 0) + 1;
+      used[workhorse.name] = (used[workhorse.name] || 0) + 1;
       remaining = remaining.map((t, i) => ({ ...t, qty: t.qty - (r.perType[i]?.loaded || 0) }));
     }
-    const combo = order.slice().reverse().filter((o) => used[o.name]).map((o) => ({ name: o.name, count: used[o.name] }));
+    const combo = stdOrder.slice().reverse().filter((o) => used[o.name]).map((o) => ({ name: o.name, count: used[o.name] }));
     return { type: "multi", combo };
+  }
+  // Baut die Kette der in der 3D-Ansicht dargestellten Container auf. Slot 0 ist der
+  // gewählte Container; Folge-Container werden automatisch als KLEINSTER Standard-Typ
+  // gewählt, der den Rest aufnimmt (weniger ungenutzter Raum – eine Wahl nach Größe,
+  // nicht nach Preis), bzw. per overrides[slot] manuell übersteuert. Es wird nur
+  // packCargo (unverändert) erneut angewendet – keine Änderung an der Pack-Logik.
+  function chainContainers(container0, preset0, cargo, slot0, overrides, MAXVIS) {
+    const order = Object.entries(PRESETS).map(([name, p]) => ({ name, p, vol: p.l * p.w * p.h })).sort((a, b) => a.vol - b.vol);
+    const hc40 = order.find((o) => o.name === "40' HC"), hc45 = order.find((o) => o.name === "45' HC");
+    let need45 = false;
+    if (hc40 && hc45) {
+      for (const t of cargo) {
+        if (num(t.qty) > 0 && packCargo(hc40.p, [{ ...t, qty: 1 }], { noHint: true, quick: true }).boxes === 0 && packCargo(hc45.p, [{ ...t, qty: 1 }], { noHint: true, quick: true }).boxes > 0) { need45 = true; break; }
+      }
+    }
+    const stdOrder = need45 ? order : order.filter((o) => o.name !== "45' HC");
+    const workhorse = stdOrder[stdOrder.length - 1];
+    const autoFollow = (rem, totRem) => {
+      for (const o of stdOrder) {
+        if (packCargo(o.p, rem, { noHint: true, quick: true }).boxes >= totRem) return o;
+      }
+      return workhorse;
+    };
+    const chain = [{ name: preset0, preset: container0, placed: slot0.placed }];
+    let remaining = cargo.map((t, i) => ({ ...t, qty: Math.max(0, Math.floor(num(t.qty))) - (slot0.perType[i]?.loaded || 0) }));
+    let totRem = remaining.reduce((s, t) => s + t.qty, 0);
+    let slot = 1;
+    while (totRem > 0 && chain.length < MAXVIS) {
+      const ov = overrides && overrides[slot];
+      const manual = ov && PRESETS[ov];
+      const pick = manual ? { name: ov, p: PRESETS[ov] } : autoFollow(remaining, totRem);
+      const rr = packCargo(pick.p, remaining, { noHint: true });
+      if (rr.boxes === 0 && !manual) break;
+      chain.push({ name: pick.name, preset: pick.p, placed: rr.placed });
+      if (rr.boxes === 0) break;
+      remaining = remaining.map((t, i) => ({ ...t, qty: t.qty - (rr.perType[i]?.loaded || 0) }));
+      totRem = remaining.reduce((s, t) => s + t.qty, 0);
+      slot++;
+    }
+    return { chain, remainingBoxes: totRem };
   }
   var LANG = (() => {
     try {
@@ -479,7 +534,9 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       recSingle: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, "Empfehlung: ein ", /* @__PURE__ */ React.createElement("b", { style: { color: "#9ecbff" } }, n), " \u2014 dann passt alles rein."),
       recMulti: (c) => /* @__PURE__ */ React.createElement(React.Fragment, null, "Du brauchst ca. ", /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, c), "."),
       recTooBig: (i) => /* @__PURE__ */ React.createElement(React.Fragment, null, "\u201E", i, '" ist gr\xF6\xDFer als jeder Standard-Container.'),
-      recNoFit: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, n), " Packst\xFCcke passen nicht rein.")
+      recNoFit: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, n), " Packst\xFCcke passen nicht rein."),
+      autoCont: "Auto",
+      openMore: (n) => `${n} offen \xB7 weitere Container n\xF6tig`
     },
     en: {
       sub: "Loading in seconds",
@@ -539,7 +596,9 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       recSingle: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, "Recommendation: one ", /* @__PURE__ */ React.createElement("b", { style: { color: "#9ecbff" } }, n), " \u2014 then it all fits."),
       recMulti: (c) => /* @__PURE__ */ React.createElement(React.Fragment, null, "You need approx. ", /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, c), "."),
       recTooBig: (i) => /* @__PURE__ */ React.createElement(React.Fragment, null, '"', i, '" is larger than any standard container.'),
-      recNoFit: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, n), " items don't fit.")
+      recNoFit: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, n), " items don't fit."),
+      autoCont: "Auto",
+      openMore: (n) => `${n} open \xB7 more containers needed`
     }
   };
   var T = I18N[LANG];
@@ -748,7 +807,18 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
     }
     return null;
   })();
-  function Viewport({ container, result }) {
+  function SlotPick({ idx, name, isMain, mainPreset, overrides, onPick }) {
+    const names = Object.keys(PRESETS);
+    const isCustomMain = isMain && !PRESETS[mainPreset];
+    const val = isMain ? isCustomMain ? "__custom" : mainPreset : overrides && overrides[idx] ? overrides[idx] : "__auto";
+    const optStyle = { background: "#0c121c", color: C.text };
+    const opts = [];
+    if (!isMain) opts.push(/* @__PURE__ */ React.createElement("option", { key: "__auto", value: "__auto", style: optStyle }, T.autoCont + " \xB7 " + (name || "")));
+    if (isCustomMain) opts.push(/* @__PURE__ */ React.createElement("option", { key: "__custom", value: "__custom", disabled: true, style: { background: "#0c121c", color: C.dim } }, "Custom"));
+    names.forEach((nm) => opts.push(/* @__PURE__ */ React.createElement("option", { key: nm, value: nm, style: optStyle }, nm)));
+    return /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1 rounded-lg px-1.5 py-1", style: { pointerEvents: "auto", background: hexA("#0c121c", 0.88), border: "1px solid #243042", backdropFilter: "blur(6px)" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 9, color: C.faint } }, "C" + (idx + 1)), /* @__PURE__ */ React.createElement("select", { value: val, onChange: (e) => onPick(idx, e.target.value), style: { background: "transparent", color: C.text, border: "none", outline: "none", fontFamily: MONO, fontSize: 10.5, fontWeight: 600, cursor: "pointer" } }, opts));
+  }
+  function Viewport({ container, result, preset, overrides, onSlotType }) {
     const mountRef = useRef(null);
     const three = useRef(null);
     const lastDims = useRef("");
@@ -779,6 +849,9 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       key.shadow.camera.top = 14;
       key.shadow.camera.bottom = -14;
       key.shadow.bias = -4e-4;
+      const keyTarget = new THREE.Object3D();
+      scene.add(keyTarget);
+      key.target = keyTarget;
       scene.add(key);
       const fill = new THREE.DirectionalLight(7317759, 0.34);
       fill.position.set(-9, 5, -7);
@@ -839,14 +912,28 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
         cur.theta += (sph.theta - cur.theta) * 0.12;
         cur.phi += (sph.phi - cur.phi) * 0.12;
         applyCam();
+        group.children.forEach((cg) => {
+          const ud = cg.userData;
+          if (ud && ud.popStart) {
+            let p = (now - ud.popStart) / 420;
+            p = p < 0 ? 0 : p > 1 ? 1 : p;
+            const e = 1 - Math.pow(1 - p, 3);
+            cg.scale.setScalar(1e-3 + e * (1 - 1e-3));
+            if (p >= 1) {
+              cg.scale.setScalar(1);
+              ud.popStart = 0;
+            }
+          }
+        });
         const rv = reveal.current;
         if (rv.animate) {
           const el = (now - rv.start) / 1e3, dur = 0.4, stag = 0.55;
           let any = false;
-          group.children.forEach((ch) => {
-            if (ch.userData && ch.userData.boxes) {
+          group.children.forEach((cg) => {
+            if (!cg.userData || !cg.userData.reveal || !cg.userData.boxMeshes) return;
+            cg.userData.boxMeshes.forEach((bm) => {
               any = true;
-              const arr = ch.userData.boxes, dm = ch.userData.dummy, N = Math.max(1, arr.length);
+              const arr = bm.boxes, dm = bm.dummy, N = Math.max(1, arr.length);
               for (let i = 0; i < arr.length; i++) {
                 const b = arr[i];
                 const delay = i / N * stag;
@@ -856,24 +943,25 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
                 dm.position.set(b.cx, b.cy, b.cz);
                 dm.scale.set(b.sx * e2, b.sy * e2, b.sz * e2);
                 dm.updateMatrix();
-                ch.setMatrixAt(i, dm.matrix);
+                bm.inst.setMatrixAt(i, dm.matrix);
               }
-              ch.instanceMatrix.needsUpdate = true;
-            }
+              bm.inst.instanceMatrix.needsUpdate = true;
+            });
           });
           if (!any || el > dur + stag + 0.06) {
-            group.children.forEach((ch) => {
-              if (ch.userData && ch.userData.boxes) {
-                const arr = ch.userData.boxes, dm = ch.userData.dummy;
+            group.children.forEach((cg) => {
+              if (!cg.userData || !cg.userData.boxMeshes) return;
+              cg.userData.boxMeshes.forEach((bm) => {
+                const arr = bm.boxes, dm = bm.dummy;
                 for (let i = 0; i < arr.length; i++) {
                   const b = arr[i];
                   dm.position.set(b.cx, b.cy, b.cz);
                   dm.scale.set(b.sx, b.sy, b.sz);
                   dm.updateMatrix();
-                  ch.setMatrixAt(i, dm.matrix);
+                  bm.inst.setMatrixAt(i, dm.matrix);
                 }
-                ch.instanceMatrix.needsUpdate = true;
-              }
+                bm.inst.instanceMatrix.needsUpdate = true;
+              });
             });
             rv.animate = false;
           }
@@ -891,7 +979,7 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
         }
       });
       ro.observe(mount);
-      three.current = { scene, camera, group, target, sph, cur, applyCam };
+      three.current = { scene, camera, group, target, sph, cur, applyCam, key, keyTarget };
       return () => {
         cancelAnimationFrame(raf);
         ro.disconnect();
@@ -907,19 +995,20 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       const t = three.current;
       if (!t) return;
       const { group } = t;
-      while (group.children.length) {
-        const c = group.children.pop();
-        c.geometry?.dispose?.();
-        const _ms = Array.isArray(c.material) ? c.material : [c.material];
-        _ms.forEach((m) => {
-          if (m && m.map && m.map.dispose) m.map.dispose();
-          if (m && m.dispose) m.dispose();
-        });
-      }
-      const CL = num(container.l) / 100, CH = num(container.h) / 100, CW = num(container.w) / 100;
-      if (CL <= 0 || CH <= 0 || CW <= 0) return;
-      const cx = CL / 2, cy = CH / 2, cz = CW / 2;
-      const STEEL = 3359322, FRAME = 4873598;
+      const gset = new Set(), mset = new Set();
+      group.traverse((o) => {
+        if (o.geometry) gset.add(o.geometry);
+        const _ms = Array.isArray(o.material) ? o.material : o.material ? [o.material] : [];
+        _ms.forEach((m) => mset.add(m));
+      });
+      gset.forEach((g) => g.dispose && g.dispose());
+      mset.forEach((m) => {
+        if (m.map && m.map.dispose) m.map.dispose();
+        if (m.dispose) m.dispose();
+      });
+      while (group.children.length) group.remove(group.children[group.children.length - 1]);
+      const STEEL = 3359322, FRAME = 4873598, P = 0.055;
+      const REDUCED = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
       const mkRib = (rep) => {
         const cv = document.createElement("canvas");
         cv.width = 256;
@@ -936,105 +1025,179 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
         t2.repeat.set(Math.max(2, Math.round(rep)), 1);
         return t2;
       };
-      const addWall = (w, h, wx, wy, wz, roty, rep, op) => {
-        const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: mkRib(rep), color: STEEL, transparent: true, opacity: op, depthWrite: false, roughness: 0.8, metalness: 0.28, side: THREE.DoubleSide }));
-        m.position.set(wx, wy, wz);
-        if (roty) m.rotation.y = roty;
-        group.add(m);
-        return m;
+      const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+      const typeMats = {};
+      const typeMat = (ti) => typeMats[ti] || (typeMats[ti] = new THREE.MeshStandardMaterial({ color: new THREE.Color(TYPE_COLORS[ti % TYPE_COLORS.length]), roughness: 0.62, metalness: 0.08 }));
+      // Container-Kette der 3D-Ansicht (Slot 0 = gewählter Container, Folge-Container ggf. anderer Typ).
+      const dimsOf = (c) => ({ CL: num(c.preset.l) / 100, CH: num(c.preset.h) / 100, CW: num(c.preset.w) / 100 });
+      const chain = (result && result.chain && result.chain.length ? result.chain : [{ name: null, preset: container, placed: result?.placed || [] }]).slice(0, 4);
+      const d0 = dimsOf(chain[0]);
+      if (d0.CL <= 0 || d0.CH <= 0 || d0.CW <= 0) return;
+      // Geometrien/Materialien/Texturen je Container-DIMENSION einmal erzeugen und wiederverwenden (r128).
+      const shellCache = {};
+      const getShell = (CL, CH, CW) => {
+        const k = CL + "|" + CH + "|" + CW;
+        if (shellCache[k]) return shellCache[k];
+        const texSide = mkRib(CL * 4), texEnd = mkRib(CW * 4);
+        const wallMat = (tex, op) => new THREE.MeshStandardMaterial({ map: tex, color: STEEL, transparent: true, opacity: op, depthWrite: false, roughness: 0.8, metalness: 0.28, side: THREE.DoubleSide });
+        const planeTop = new THREE.PlaneGeometry(CL, CW), geoTop = new THREE.EdgesGeometry(planeTop);
+        planeTop.dispose();
+        const gridProto = new THREE.GridHelper(Math.ceil(Math.max(CL, CW)) + 2, Math.ceil(Math.max(CL, CW)) + 2, 2899024, 1449771);
+        gridProto.material.transparent = true;
+        gridProto.material.opacity = 0.5;
+        const S = { CL, CH, CW, matSide: wallMat(texSide, 0.15), matEndA: wallMat(texEnd, 0.16), matEndB: wallMat(texEnd, 0.1), matRoof: new THREE.MeshStandardMaterial({ color: STEEL, transparent: true, opacity: 0.05, depthWrite: false, side: THREE.DoubleSide }), matFloor: new THREE.MeshStandardMaterial({ color: 2107962, roughness: 0.9, metalness: 0.12 }), fmat: new THREE.MeshStandardMaterial({ color: FRAME, roughness: 0.5, metalness: 0.5 }), matTop: new THREE.LineBasicMaterial({ color: 7312324, transparent: true, opacity: 0.55 }), geoWallSide: new THREE.PlaneGeometry(CL, CH), geoWallEnd: new THREE.PlaneGeometry(CW, CH), geoRoof: new THREE.PlaneGeometry(CL, CW), geoCol: new THREE.BoxGeometry(P, CH, P), geoBeamL: new THREE.BoxGeometry(CL + P, P, P), geoBeamW: new THREE.BoxGeometry(P, P, CW + P), geoSeam: new THREE.BoxGeometry(0.03, CH * 0.94, 0.03), geoTop, gridGeo: gridProto.geometry, gridMat: gridProto.material };
+        shellCache[k] = S;
+        return S;
       };
-      addWall(CL, CH, cx, cy, 0, 0, CL * 4, 0.15);
-      addWall(CL, CH, cx, cy, CW, 0, CL * 4, 0.15);
-      addWall(CW, CH, 0, cy, cz, Math.PI / 2, CW * 4, 0.16);
-      addWall(CW, CH, CL, cy, cz, Math.PI / 2, CW * 4, 0.1);
-      const roof = new THREE.Mesh(new THREE.PlaneGeometry(CL, CW), new THREE.MeshStandardMaterial({ color: STEEL, transparent: true, opacity: 0.05, depthWrite: false, side: THREE.DoubleSide }));
-      roof.rotation.x = -Math.PI / 2;
-      roof.position.set(cx, CH, cz);
-      group.add(roof);
-      const floor = new THREE.Mesh(new THREE.PlaneGeometry(CL, CW), new THREE.MeshStandardMaterial({ color: 2107962, roughness: 0.9, metalness: 0.12 }));
-      floor.rotation.x = -Math.PI / 2;
-      floor.position.set(cx, 5e-3, cz);
-      floor.receiveShadow = true;
-      group.add(floor);
-      const fmat = new THREE.MeshStandardMaterial({ color: FRAME, roughness: 0.5, metalness: 0.5 });
-      const P = 0.055;
-      [[0, 0], [CL, 0], [0, CW], [CL, CW]].forEach((c2) => {
-        const b = new THREE.Mesh(new THREE.BoxGeometry(P, CH, P), fmat);
-        b.position.set(c2[0], cy, c2[1]);
-        b.castShadow = true;
-        group.add(b);
-      });
-      [0, CH].forEach((y) => {
-        const a1 = new THREE.Mesh(new THREE.BoxGeometry(CL + P, P, P), fmat);
-        a1.position.set(cx, y, 0);
-        group.add(a1);
-        const a2 = new THREE.Mesh(new THREE.BoxGeometry(CL + P, P, P), fmat);
-        a2.position.set(cx, y, CW);
-        group.add(a2);
-        const b1 = new THREE.Mesh(new THREE.BoxGeometry(P, P, CW + P), fmat);
-        b1.position.set(0, y, cz);
-        group.add(b1);
-        const b2 = new THREE.Mesh(new THREE.BoxGeometry(P, P, CW + P), fmat);
-        b2.position.set(CL, y, cz);
-        group.add(b2);
-      });
-      const seam = new THREE.Mesh(new THREE.BoxGeometry(0.03, CH * 0.94, 0.03), fmat);
-      seam.position.set(CL + 2e-3, cy, cz);
-      group.add(seam);
-      const topEdge = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(CL, CW)), new THREE.LineBasicMaterial({ color: 7312324, transparent: true, opacity: 0.55 }));
-      topEdge.rotation.x = -Math.PI / 2;
-      topEdge.position.set(cx, CH + 1e-3, cz);
-      group.add(topEdge);
-      const grid = new THREE.GridHelper(Math.ceil(Math.max(CL, CW)) + 2, Math.ceil(Math.max(CL, CW)) + 2, 2899024, 1449771);
-      grid.position.set(cx, 2e-3, cz);
-      grid.material.transparent = true;
-      grid.material.opacity = 0.5;
-      group.add(grid);
-      const placed = result?.placed || [];
-      const byType = {};
-      placed.forEach((p) => (byType[p.ti] = byType[p.ti] || []).push(p));
-      const willAnimate = placed.length > 0 && placed.length <= 280 && placed.length !== reveal.current.prevN;
-      reveal.current.prevN = placed.length;
+      const addShell = (parent, S) => {
+        const CL = S.CL, CH = S.CH, CW = S.CW, cx = CL / 2, cy = CH / 2, cz = CW / 2;
+        const w1 = new THREE.Mesh(S.geoWallSide, S.matSide);
+        w1.position.set(cx, cy, 0);
+        parent.add(w1);
+        const w2 = new THREE.Mesh(S.geoWallSide, S.matSide);
+        w2.position.set(cx, cy, CW);
+        parent.add(w2);
+        const w3 = new THREE.Mesh(S.geoWallEnd, S.matEndA);
+        w3.position.set(0, cy, cz);
+        w3.rotation.y = Math.PI / 2;
+        parent.add(w3);
+        const w4 = new THREE.Mesh(S.geoWallEnd, S.matEndB);
+        w4.position.set(CL, cy, cz);
+        w4.rotation.y = Math.PI / 2;
+        parent.add(w4);
+        const roof = new THREE.Mesh(S.geoRoof, S.matRoof);
+        roof.rotation.x = -Math.PI / 2;
+        roof.position.set(cx, CH, cz);
+        parent.add(roof);
+        const floor = new THREE.Mesh(S.geoRoof, S.matFloor);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.set(cx, 5e-3, cz);
+        floor.receiveShadow = true;
+        parent.add(floor);
+        [[0, 0], [CL, 0], [0, CW], [CL, CW]].forEach((c2) => {
+          const b = new THREE.Mesh(S.geoCol, S.fmat);
+          b.position.set(c2[0], cy, c2[1]);
+          b.castShadow = true;
+          parent.add(b);
+        });
+        [0, CH].forEach((y) => {
+          const a1 = new THREE.Mesh(S.geoBeamL, S.fmat);
+          a1.position.set(cx, y, 0);
+          parent.add(a1);
+          const a2 = new THREE.Mesh(S.geoBeamL, S.fmat);
+          a2.position.set(cx, y, CW);
+          parent.add(a2);
+          const b1 = new THREE.Mesh(S.geoBeamW, S.fmat);
+          b1.position.set(0, y, cz);
+          parent.add(b1);
+          const b2 = new THREE.Mesh(S.geoBeamW, S.fmat);
+          b2.position.set(CL, y, cz);
+          parent.add(b2);
+        });
+        const seam = new THREE.Mesh(S.geoSeam, S.fmat);
+        seam.position.set(CL + 2e-3, cy, cz);
+        parent.add(seam);
+        const te = new THREE.LineSegments(S.geoTop, S.matTop);
+        te.rotation.x = -Math.PI / 2;
+        te.position.set(cx, CH + 1e-3, cz);
+        parent.add(te);
+        const g = new THREE.LineSegments(S.gridGeo, S.gridMat);
+        g.position.set(cx, 2e-3, cz);
+        parent.add(g);
+      };
       const gap = 0.02;
       const dummy = new THREE.Object3D();
-      Object.entries(byType).forEach(([ti, arr]) => {
-        const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(TYPE_COLORS[ti % TYPE_COLORS.length]), roughness: 0.62, metalness: 0.08 });
-        const inst = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), mat, arr.length);
-        inst.castShadow = true;
-        inst.receiveShadow = true;
-        const boxes = arr.map((p) => {
-          const dx = p.dx / 100, dy = p.dy / 100, dz = p.dz / 100;
-          return { cx: p.x / 100 + dx / 2, cy: p.y / 100 + dy / 2, cz: p.z / 100 + dz / 2, sx: Math.max(dx - gap, 0.01), sy: Math.max(dy - gap, 0.01), sz: Math.max(dz - gap, 0.01) };
+      const dimsArr = chain.map(dimsOf);
+      const gapX = Math.max(0.6, Math.max(...dimsArr.map((d) => d.CL)) * 0.16);
+      const xpos = [];
+      let acc = 0;
+      dimsArr.forEach((d, i) => { xpos[i] = acc; acc += d.CL + gapX; });
+      const rowW = acc - gapX, rowCx = rowW / 2;
+      const maxCH = Math.max(...dimsArr.map((d) => d.CH)), maxCW = Math.max(...dimsArr.map((d) => d.CW));
+      const placed0 = chain[0].placed || [];
+      const willAnimate = !REDUCED && placed0.length > 0 && placed0.length <= 280 && placed0.length !== reveal.current.prevN;
+      reveal.current.prevN = placed0.length;
+      const prevC = reveal.current.prevContainers || 0;
+      chain.forEach((c, ci) => {
+        const d = dimsArr[ci], S = getShell(d.CL, d.CH, d.CW);
+        const cg = new THREE.Group();
+        cg.position.x = xpos[ci];
+        addShell(cg, S);
+        const byType = {};
+        (c.placed || []).forEach((p) => (byType[p.ti] = byType[p.ti] || []).push(p));
+        const boxMeshes = [];
+        Object.entries(byType).forEach(([ti, arr]) => {
+          const inst = new THREE.InstancedMesh(boxGeo, typeMat(ti), arr.length);
+          inst.castShadow = true;
+          inst.receiveShadow = true;
+          const boxes = arr.map((p) => {
+            const dx = p.dx / 100, dy = p.dy / 100, dz = p.dz / 100;
+            return { cx: p.x / 100 + dx / 2, cy: p.y / 100 + dy / 2, cz: p.z / 100 + dz / 2, sx: Math.max(dx - gap, 0.01), sy: Math.max(dy - gap, 0.01), sz: Math.max(dz - gap, 0.01) };
+          });
+          const s = ci === 0 && willAnimate ? 1e-4 : 1;
+          boxes.forEach((b, i) => {
+            dummy.position.set(b.cx, b.cy, b.cz);
+            dummy.scale.set(b.sx * s, b.sy * s, b.sz * s);
+            dummy.updateMatrix();
+            inst.setMatrixAt(i, dummy.matrix);
+          });
+          inst.instanceMatrix.needsUpdate = true;
+          cg.add(inst);
+          boxMeshes.push({ inst, boxes, dummy });
         });
-        boxes.forEach((b, i) => {
-          const s = willAnimate ? 1e-4 : 1;
-          dummy.position.set(b.cx, b.cy, b.cz);
-          dummy.scale.set(b.sx * s, b.sy * s, b.sz * s);
-          dummy.updateMatrix();
-          inst.setMatrixAt(i, dummy.matrix);
-        });
-        inst.instanceMatrix.needsUpdate = true;
-        inst.userData = { boxes, dummy };
-        group.add(inst);
+        const isNew = !REDUCED && ci >= 1 && ci >= prevC;
+        cg.userData = { boxMeshes, reveal: ci === 0 && willAnimate, popStart: isNew ? performance.now() + (ci - Math.max(1, prevC)) * 120 : 0 };
+        if (isNew) cg.scale.setScalar(1e-3);
+        group.add(cg);
       });
-      if (willAnimate) reveal.current = { ...reveal.current, start: performance.now(), animate: true };
-      const dimKey = `${CL}-${CH}-${CW}`;
+      if (willAnimate) {
+        reveal.current.start = performance.now();
+        reveal.current.animate = true;
+      }
+      reveal.current.prevContainers = chain.length;
+      const n = chain.length;
+      t.frame = { cx: rowCx, cy: maxCH / 2, cz: maxCW / 2, r: Math.sqrt(rowW * rowW + maxCH * maxCH + maxCW * maxCW) * (n > 1 ? 1.25 : 1.42) };
+      // Nebel & Schatten an die Szenengröße anpassen (Einzelcontainer bleibt unverändert).
+      if (t.scene && t.scene.fog) {
+        t.scene.fog.near = n > 1 ? Math.max(16, t.frame.r * 0.8) : 16;
+        t.scene.fog.far = n > 1 ? t.frame.r + rowW + 14 : 46;
+      }
+      if (t.key) {
+        const half = n > 1 ? Math.max(14, rowW * 0.62) : 14;
+        const sc = t.key.shadow.camera;
+        sc.left = -half;
+        sc.right = half;
+        sc.top = half;
+        sc.bottom = -half;
+        sc.far = n > 1 ? 70 + rowW : 70;
+        sc.updateProjectionMatrix();
+        const lx = n > 1 ? rowCx : 0, lz = n > 1 ? maxCW / 2 : 0;
+        t.key.position.set(lx + 7, 17, lz + 9);
+        t.keyTarget.position.set(lx, 0, lz);
+        t.keyTarget.updateMatrixWorld();
+      }
+      const dimKey = chain.map((c, i) => (c.name || "c") + ":" + dimsArr[i].CL + "," + dimsArr[i].CH + "," + dimsArr[i].CW).join("|") + "|" + n;
       if (lastDims.current !== dimKey) {
         lastDims.current = dimKey;
-        t.target.set(cx, cy, cz);
-        t.sph.r = Math.sqrt(CL * CL + CH * CH + CW * CW) * 1.42;
+        t.target.set(rowCx, maxCH / 2, maxCW / 2);
+        t.sph.r = t.frame.r;
       }
     }, [result, container]);
     const reset = () => {
       const t = three.current;
       if (!t) return;
-      const CL = num(container.l) / 100, CH = num(container.h) / 100, CW = num(container.w) / 100;
-      t.target.set(CL / 2, CH / 2, CW / 2);
-      t.sph.r = Math.sqrt(CL * CL + CH * CH + CW * CW) * 1.42;
+      if (t.frame) {
+        t.target.set(t.frame.cx, t.frame.cy, t.frame.cz);
+        t.sph.r = t.frame.r;
+      } else {
+        const CL = num(container.l) / 100, CH = num(container.h) / 100, CW = num(container.w) / 100;
+        t.target.set(CL / 2, CH / 2, CW / 2);
+        t.sph.r = Math.sqrt(CL * CL + CH * CH + CW * CW) * 1.42;
+      }
       t.sph.theta = -0.92;
       t.sph.phi = 1;
     };
-    return /* @__PURE__ */ React.createElement("div", { className: "relative w-full h-full" }, /* @__PURE__ */ React.createElement("div", { ref: mountRef, className: "w-full h-full", style: { background: "radial-gradient(120% 80% at 50% 0%, #101a2b 0%, #0a0f17 55%, #070a0f 100%)" } }), /* @__PURE__ */ React.createElement("div", { className: "absolute inset-0 pointer-events-none", style: { background: "radial-gradient(75% 70% at 50% 45%, transparent 55%, rgba(4,7,11,0.55) 100%)" } }), /* @__PURE__ */ React.createElement("div", { className: "absolute bottom-3 left-4 text-[10px] tracking-[0.18em] uppercase pointer-events-none", style: { fontFamily: MONO, color: C.faint } }, "ziehen \xB7 scrollen"), /* @__PURE__ */ React.createElement("button", { onClick: reset, className: "absolute top-3 right-3 w-8 h-8 rounded-lg flex items-center justify-center transition hover:brightness-125", style: { background: hexA("#0c121c", 0.8), border: `1px solid ${hexA(C.accent, 0.3)}`, color: C.dim, backdropFilter: "blur(6px)" }, title: "Ansicht zur\xFCcksetzen" }, "\u27F3"));
+    return /* @__PURE__ */ React.createElement("div", { className: "relative w-full h-full" }, /* @__PURE__ */ React.createElement("div", { ref: mountRef, className: "w-full h-full", style: { background: "radial-gradient(120% 80% at 50% 0%, #101a2b 0%, #0a0f17 55%, #070a0f 100%)" } }), /* @__PURE__ */ React.createElement("div", { className: "absolute inset-0 pointer-events-none", style: { background: "radial-gradient(75% 70% at 50% 45%, transparent 55%, rgba(4,7,11,0.55) 100%)" } }), /* @__PURE__ */ React.createElement("div", { className: "absolute bottom-3 left-4 text-[10px] tracking-[0.18em] uppercase pointer-events-none", style: { fontFamily: MONO, color: C.faint } }, "ziehen \xB7 scrollen"), result && result.chain && result.chain.length > 1 && /* @__PURE__ */ React.createElement("div", { className: "absolute flex flex-col items-end gap-1.5", style: { top: 48, right: 10, zIndex: 6, pointerEvents: "none", maxWidth: "54%" } }, result.chain.map((c, i) => /* @__PURE__ */ React.createElement(SlotPick, { key: i, idx: i, name: c.name, isMain: i === 0, mainPreset: preset, overrides, onPick: onSlotType })), result.remainingBoxes > 0 && /* @__PURE__ */ React.createElement("div", { key: "more", className: "pointer-events-none", style: { fontFamily: MONO, fontSize: 10, letterSpacing: "0.03em", color: C.warn, background: hexA("#0c121c", 0.82), border: `1px solid ${hexA(C.warn, 0.4)}`, borderRadius: 8, padding: "4px 9px", backdropFilter: "blur(6px)" } }, T.openMore(result.remainingBoxes))), /* @__PURE__ */ React.createElement("button", { onClick: reset, className: "absolute top-3 right-3 w-8 h-8 rounded-lg flex items-center justify-center transition hover:brightness-125", style: { background: hexA("#0c121c", 0.8), border: `1px solid ${hexA(C.accent, 0.3)}`, color: C.dim, backdropFilter: "blur(6px)" }, title: "Ansicht zur\xFCcksetzen" }, "\u27F3"));
   }
   var Label = ({ children }) => /* @__PURE__ */ React.createElement("span", { className: "block mb-1.5", style: { fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", color: C.dim } }, children);
   var Num = ({ value, onChange, mono = true }) => /* @__PURE__ */ React.createElement(
@@ -1090,15 +1253,28 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
     const [shareURL, setShareURL] = useState("");
     const [shareCopied, setShareCopied] = useState(false);
     const [result, setResult] = useState(() => packCargo(INIT_CONTAINER, INIT_CARGO));
+    const [chainOverride, setChainOverride] = useState({});
     const [toast, setToast] = useState("");
     useEffect(() => {
       const t = setTimeout(() => {
         const r = packCargo(container, cargo);
         if (r.boxes < r.totalBoxes && r.totalBoxes > 0 && !r.rotHintAll) r.suggestion = suggestContainer(cargo);
+        // 3D-Ansicht: Container-Kette aufbauen (Slot 0 = gewählter Container; Folge-Container
+        // automatisch kleinster passender Typ oder manuell übersteuert). Gedeckelt auf 4 Hüllen;
+        // was darüber hinaus nicht passt, wird als ehrlicher Überhang gemeldet.
+        const MAXVIS = 4;
+        if (r.boxes < r.totalBoxes && r.totalBoxes > 0) {
+          const ch = chainContainers(container, preset, cargo, r, chainOverride, MAXVIS);
+          r.chain = ch.chain;
+          r.remainingBoxes = ch.remainingBoxes;
+        } else {
+          r.chain = [{ name: preset, preset: container, placed: r.placed }];
+          r.remainingBoxes = 0;
+        }
         setResult(r);
       }, 200);
       return () => clearTimeout(t);
-    }, [container, cargo]);
+    }, [container, cargo, preset, chainOverride]);
     useEffect(() => {
       if (!toast) return;
       const t = setTimeout(() => setToast(""), 2600);
@@ -1117,6 +1293,19 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
     const applyPreset = (p) => {
       setPreset(p);
       if (PRESETS[p]) setContainer({ ...PRESETS[p] });
+    };
+    // Manuelle Container-Wahl je dargestelltem Container (nur sitzungsweise, NICHT im ?p=-Link).
+    const onSlotType = (slot, name) => {
+      if (slot === 0) {
+        if (PRESETS[name]) applyPreset(name);
+        return;
+      }
+      setChainOverride((o) => {
+        const next = { ...o };
+        if (name === "__auto" || !PRESETS[name]) delete next[slot];
+        else next[slot] = name;
+        return next;
+      });
     };
     const upd = (id, k, v) => setCargo((cs) => cs.map((c) => c.id === id ? { ...c, [k]: v } : c));
     const addCargo = () => setCargo((cs) => [...cs, { id: uid(), name: "Packst\xFCck", l: 120, w: 80, h: 110, weight: 300, qty: 1, stackable: true, rotatable: true }]);
@@ -1270,7 +1459,7 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
         const on = c.rotatable !== false;
         return /* @__PURE__ */ React.createElement("button", { onClick: () => upd(c.id, "rotatable", !on), className: "rounded-lg transition flex items-center gap-1", style: { height: 31, padding: "0 12px", fontSize: 10.5, fontWeight: on ? 600 : 500, background: on ? hexA(C.accent, 0.15) : "#101824", border: `1px solid ${on ? hexA(C.accent, 0.6) : "#222d3c"}`, color: on ? C.accent : C.dim } }, "\u21BB 90\xB0");
       })())));
-    })))), /* @__PURE__ */ React.createElement("main", { className: "flex-1 min-h-0 flex flex-col" }, /* @__PURE__ */ React.createElement("div", { className: "relative flex-1 min-h-[380px]" }, /* @__PURE__ */ React.createElement(Viewport, { container, result }), doorFails.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "absolute top-4 left-1/2 clrise", style: { transform: "translateX(-50%)", zIndex: 6 } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 rounded-xl px-3.5 py-2", style: { background: hexA("#1a0f08", 0.9), border: `1px solid ${hexA(C.warn, 0.55)}`, backdropFilter: "blur(10px)", boxShadow: "0 10px 30px -10px rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14 } }, "\u{1F6AA}"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11.5, lineHeight: 1.3, color: "#ffd9a8", maxWidth: 250 } }, T.doorWarn(doorFails.length), " \xB7 ", T.doorHint(doorOpening.w, doorOpening.h)))), /* @__PURE__ */ React.createElement("div", { className: "absolute top-4 left-4 clrise", style: { pointerEvents: "none" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3 rounded-2xl p-3 pr-4", style: { background: hexA("#0a0f18", 0.72), border: "1px solid #1e2a3a", backdropFilter: "blur(10px)", boxShadow: "0 10px 40px -12px rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement(Gauge, { value: result.util, color: utilColor }), /* @__PURE__ */ React.createElement("div", { className: "leading-tight" }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.12em", textTransform: "uppercase", color: C.dim } }, T.loaded), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 22, fontWeight: 700, color: allFit ? C.good : C.text } }, result.boxes, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: C.faint } }, " / ", result.totalBoxes)), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1.5 mt-1", style: { fontSize: 11.5, fontWeight: 600, color: allFit ? C.good : C.warn } }, /* @__PURE__ */ React.createElement("span", null, allFit ? "\u2713" : "\u26A0"), /* @__PURE__ */ React.createElement("span", null, allFit ? T.allLoaded : T.open(unplaced)))))), unplaced > 0 && /* @__PURE__ */ React.createElement("div", { className: "absolute bottom-4 left-4 right-4 flex justify-center clrise", style: { pointerEvents: "none" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3 rounded-2xl px-4 py-2.5 max-w-[560px]", style: { pointerEvents: "auto", background: hexA("#0a0f18", 0.82), border: `1px solid ${hexA(result.rotHintAll || sug && sug.type === "single" ? C.accent : C.warn, 0.5)}`, backdropFilter: "blur(10px)", boxShadow: "0 10px 40px -12px rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, result.rotHintAll ? "\u21BB" : "\u{1F4E6}"), /* @__PURE__ */ React.createElement("div", { className: "flex-1", style: { fontSize: 12.5, lineHeight: 1.35, color: "#d4dce5" } }, result.rotHintAll && T.recRot(preset), !result.rotHintAll && sug && sug.type === "single" && T.recSingle(sug.name), !result.rotHintAll && sug && sug.type === "multi" && T.recMulti(sug.combo.map((x) => `${x.count}\xD7 ${x.name}`).join(" + ")), !result.rotHintAll && sug && sug.type === "toobig" && T.recTooBig(sug.item), !result.rotHintAll && !sug && T.recNoFit(unplaced)), result.rotHintAll && /* @__PURE__ */ React.createElement("button", { onClick: enableAllRotate, className: "px-3 py-1.5 rounded-lg whitespace-nowrap transition hover:brightness-110", style: { background: `linear-gradient(90deg,${C.accent},${C.teal})`, color: "#04101f", fontSize: 12, fontWeight: 700 } }, T.rotOn), !result.rotHintAll && sug && sug.type === "single" && /* @__PURE__ */ React.createElement("button", { onClick: () => applyPreset(sug.name), className: "px-3 py-1.5 rounded-lg whitespace-nowrap transition hover:brightness-110", style: { background: `linear-gradient(90deg,${C.accent},${C.teal})`, color: "#04101f", fontSize: 12, fontWeight: 700 } }, T.apply)))), /* @__PURE__ */ React.createElement("div", { style: { borderTop: "1px solid #141c27", background: hexA("#080c12", 0.7) } }, /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 sm:grid-cols-4" }, /* @__PURE__ */ React.createElement(Stat, { label: T.loaded, value: `${result.boxes}`, sub: `/ ${result.totalBoxes}`, accent: allFit ? C.good : C.warn }), /* @__PURE__ */ React.createElement(Stat, { label: T.volume, value: result.usedVol.toFixed(1), sub: `/ ${result.contVol.toFixed(1)} m\xB3`, accent: "#9ecbff" }), /* @__PURE__ */ React.createElement(Stat, { label: T.weight, value: `${Math.round(result.weight)}`, sub: num(container.payload) > 0 ? `/ ${num(container.payload)} kg` : "kg", accent: payColor }), /* @__PURE__ */ React.createElement(Stat, { label: T.layers, value: `${result.single ? result.layers : Math.max(1, result.layers) || 0}`, sub: result.single ? T.stacked : T.mixed, accent: C.teal })), /* @__PURE__ */ React.createElement("div", { className: "px-5 py-3 space-y-2.5", style: { borderTop: "1px solid #121925" } }, /* @__PURE__ */ React.createElement(Meter, { label: T.volUtil, pct: result.util, color: utilColor, text: `${result.util.toFixed(0)}%` }), num(container.payload) > 0 && /* @__PURE__ */ React.createElement(Meter, { label: T.payloadUtil, pct: Math.min(payPct, 100), color: payColor, text: `${payPct.toFixed(0)}%`, over: payPct > 100 }))))), /* @__PURE__ */ React.createElement("footer", { className: "px-5 py-2.5 flex items-center justify-between", style: { borderTop: "1px solid #121925", fontFamily: MONO, fontSize: 9.5, color: C.faint, letterSpacing: "0.08em" } }, /* @__PURE__ */ React.createElement("span", null, T.footL), /* @__PURE__ */ React.createElement("span", null, T.footR)), shareOpen && /* @__PURE__ */ React.createElement("div", { className: "fixed inset-0 flex items-center justify-center p-4", style: { zIndex: 60, background: "rgba(4,8,14,0.74)", backdropFilter: "blur(4px)" }, onClick: () => setShareOpen(false) }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), className: "w-full clrise", style: { maxWidth: 520, background: "#0c1320", borderRadius: 18, border: `1px solid ${C.fieldBorder}`, boxShadow: "0 30px 80px -20px rgba(0,0,0,0.85)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 px-5 py-3.5", style: { borderBottom: "1px solid #1a2536" } }, /* @__PURE__ */ React.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: C.accent, strokeWidth: "2.4", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "5", r: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "6", cy: "12", r: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "19", r: "3" }), /* @__PURE__ */ React.createElement("path", { d: "M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" })), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700, fontSize: 15 } }, T.shareTitle), /* @__PURE__ */ React.createElement("button", { onClick: () => setShareOpen(false), className: "ml-auto w-7 h-7 rounded-lg flex items-center justify-center transition hover:brightness-125", style: { background: "#131c2b", border: "1px solid #283649", color: C.dim, fontSize: 16, lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { className: "p-5" }, /* @__PURE__ */ React.createElement("div", { style: { color: C.dim, fontSize: 13, lineHeight: 1.5, marginBottom: 12 } }, T.shareDesc), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ React.createElement("input", { readOnly: true, value: shareURL, onFocus: (e) => e.target.select(), className: "flex-1 rounded-lg px-3 py-2.5", style: { background: C.field, border: `1px solid ${C.fieldBorder}`, color: C.text, fontSize: 12, fontFamily: MONO, outline: "none" } }), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+    })))), /* @__PURE__ */ React.createElement("main", { className: "flex-1 min-h-0 flex flex-col" }, /* @__PURE__ */ React.createElement("div", { className: "relative flex-1 min-h-[380px]" }, /* @__PURE__ */ React.createElement(Viewport, { container, result, preset, overrides: chainOverride, onSlotType }), doorFails.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "absolute top-4 left-1/2 clrise", style: { transform: "translateX(-50%)", zIndex: 6 } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 rounded-xl px-3.5 py-2", style: { background: hexA("#1a0f08", 0.9), border: `1px solid ${hexA(C.warn, 0.55)}`, backdropFilter: "blur(10px)", boxShadow: "0 10px 30px -10px rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14 } }, "\u{1F6AA}"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11.5, lineHeight: 1.3, color: "#ffd9a8", maxWidth: 250 } }, T.doorWarn(doorFails.length), " \xB7 ", T.doorHint(doorOpening.w, doorOpening.h)))), /* @__PURE__ */ React.createElement("div", { className: "absolute top-4 left-4 clrise", style: { pointerEvents: "none" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3 rounded-2xl p-3 pr-4", style: { background: hexA("#0a0f18", 0.72), border: "1px solid #1e2a3a", backdropFilter: "blur(10px)", boxShadow: "0 10px 40px -12px rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement(Gauge, { value: result.util, color: utilColor }), /* @__PURE__ */ React.createElement("div", { className: "leading-tight" }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.12em", textTransform: "uppercase", color: C.dim } }, T.loaded), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 22, fontWeight: 700, color: allFit ? C.good : C.text } }, result.boxes, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: C.faint } }, " / ", result.totalBoxes)), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1.5 mt-1", style: { fontSize: 11.5, fontWeight: 600, color: allFit ? C.good : C.warn } }, /* @__PURE__ */ React.createElement("span", null, allFit ? "\u2713" : "\u26A0"), /* @__PURE__ */ React.createElement("span", null, allFit ? T.allLoaded : T.open(unplaced)))))), unplaced > 0 && /* @__PURE__ */ React.createElement("div", { className: "absolute bottom-4 left-4 right-4 flex justify-center clrise", style: { pointerEvents: "none" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3 rounded-2xl px-4 py-2.5 max-w-[560px]", style: { pointerEvents: "auto", background: hexA("#0a0f18", 0.82), border: `1px solid ${hexA(result.rotHintAll || sug && sug.type === "single" ? C.accent : C.warn, 0.5)}`, backdropFilter: "blur(10px)", boxShadow: "0 10px 40px -12px rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, result.rotHintAll ? "\u21BB" : "\u{1F4E6}"), /* @__PURE__ */ React.createElement("div", { className: "flex-1", style: { fontSize: 12.5, lineHeight: 1.35, color: "#d4dce5" } }, result.rotHintAll && T.recRot(preset), !result.rotHintAll && sug && sug.type === "single" && T.recSingle(sug.name), !result.rotHintAll && sug && sug.type === "multi" && T.recMulti(sug.combo.map((x) => `${x.count}\xD7 ${x.name}`).join(" + ")), !result.rotHintAll && sug && sug.type === "toobig" && T.recTooBig(sug.item), !result.rotHintAll && !sug && T.recNoFit(unplaced)), result.rotHintAll && /* @__PURE__ */ React.createElement("button", { onClick: enableAllRotate, className: "px-3 py-1.5 rounded-lg whitespace-nowrap transition hover:brightness-110", style: { background: `linear-gradient(90deg,${C.accent},${C.teal})`, color: "#04101f", fontSize: 12, fontWeight: 700 } }, T.rotOn), !result.rotHintAll && sug && sug.type === "single" && /* @__PURE__ */ React.createElement("button", { onClick: () => applyPreset(sug.name), className: "px-3 py-1.5 rounded-lg whitespace-nowrap transition hover:brightness-110", style: { background: `linear-gradient(90deg,${C.accent},${C.teal})`, color: "#04101f", fontSize: 12, fontWeight: 700 } }, T.apply)))), /* @__PURE__ */ React.createElement("div", { style: { borderTop: "1px solid #141c27", background: hexA("#080c12", 0.7) } }, /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 sm:grid-cols-4" }, /* @__PURE__ */ React.createElement(Stat, { label: T.loaded, value: `${result.boxes}`, sub: `/ ${result.totalBoxes}`, accent: allFit ? C.good : C.warn }), /* @__PURE__ */ React.createElement(Stat, { label: T.volume, value: result.usedVol.toFixed(1), sub: `/ ${result.contVol.toFixed(1)} m\xB3`, accent: "#9ecbff" }), /* @__PURE__ */ React.createElement(Stat, { label: T.weight, value: `${Math.round(result.weight)}`, sub: num(container.payload) > 0 ? `/ ${num(container.payload)} kg` : "kg", accent: payColor }), /* @__PURE__ */ React.createElement(Stat, { label: T.layers, value: `${result.single ? result.layers : Math.max(1, result.layers) || 0}`, sub: result.single ? T.stacked : T.mixed, accent: C.teal })), /* @__PURE__ */ React.createElement("div", { className: "px-5 py-3 space-y-2.5", style: { borderTop: "1px solid #121925" } }, /* @__PURE__ */ React.createElement(Meter, { label: T.volUtil, pct: result.util, color: utilColor, text: `${result.util.toFixed(0)}%` }), num(container.payload) > 0 && /* @__PURE__ */ React.createElement(Meter, { label: T.payloadUtil, pct: Math.min(payPct, 100), color: payColor, text: `${payPct.toFixed(0)}%`, over: payPct > 100 }))))), /* @__PURE__ */ React.createElement("footer", { className: "px-5 py-2.5 flex items-center justify-between", style: { borderTop: "1px solid #121925", fontFamily: MONO, fontSize: 9.5, color: C.faint, letterSpacing: "0.08em" } }, /* @__PURE__ */ React.createElement("span", null, T.footL), /* @__PURE__ */ React.createElement("span", null, T.footR)), shareOpen && /* @__PURE__ */ React.createElement("div", { className: "fixed inset-0 flex items-center justify-center p-4", style: { zIndex: 60, background: "rgba(4,8,14,0.74)", backdropFilter: "blur(4px)" }, onClick: () => setShareOpen(false) }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), className: "w-full clrise", style: { maxWidth: 520, background: "#0c1320", borderRadius: 18, border: `1px solid ${C.fieldBorder}`, boxShadow: "0 30px 80px -20px rgba(0,0,0,0.85)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 px-5 py-3.5", style: { borderBottom: "1px solid #1a2536" } }, /* @__PURE__ */ React.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: C.accent, strokeWidth: "2.4", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "5", r: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "6", cy: "12", r: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "19", r: "3" }), /* @__PURE__ */ React.createElement("path", { d: "M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" })), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700, fontSize: 15 } }, T.shareTitle), /* @__PURE__ */ React.createElement("button", { onClick: () => setShareOpen(false), className: "ml-auto w-7 h-7 rounded-lg flex items-center justify-center transition hover:brightness-125", style: { background: "#131c2b", border: "1px solid #283649", color: C.dim, fontSize: 16, lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { className: "p-5" }, /* @__PURE__ */ React.createElement("div", { style: { color: C.dim, fontSize: 13, lineHeight: 1.5, marginBottom: 12 } }, T.shareDesc), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ React.createElement("input", { readOnly: true, value: shareURL, onFocus: (e) => e.target.select(), className: "flex-1 rounded-lg px-3 py-2.5", style: { background: C.field, border: `1px solid ${C.fieldBorder}`, color: C.text, fontSize: 12, fontFamily: MONO, outline: "none" } }), /* @__PURE__ */ React.createElement("button", { onClick: () => {
       try {
         navigator.clipboard.writeText(shareURL).then(() => setShareCopied(true), () => {
         });
