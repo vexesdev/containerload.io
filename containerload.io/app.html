@@ -376,15 +376,30 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
     const totalBoxes = cargo.reduce((s, t) => s + Math.max(0, num(t.qty)), 0);
     if (totalBoxes === 0) return null;
     const order = Object.entries(PRESETS).map(([name, p]) => ({ name, p, vol: p.l * p.w * p.h })).sort((a, b) => a.vol - b.vol);
-    for (const o of order) {
+    const absLargest = order[order.length - 1];
+    const hc40 = order.find((o) => o.name === "40' HC");
+    const hc45 = order.find((o) => o.name === "45' HC");
+    // Ehrliche Ausnahme: Der 45' HC ist in DE/EU unueblich und soll nicht der
+    // bevorzugte Standard sein. Er wird nur dann zugelassen, wenn ein einzelnes
+    // Packstueck physisch nicht in den 40' HC passt, aber in den 45' HC (z. B. Ueberlaenge).
+    let need45 = false;
+    if (hc40 && hc45) {
+      for (const t of cargo) {
+        if (num(t.qty) > 0 && packCargo(hc40.p, [{ ...t, qty: 1 }], { noHint: true, quick: true }).boxes === 0 && packCargo(hc45.p, [{ ...t, qty: 1 }], { noHint: true, quick: true }).boxes > 0) { need45 = true; break; }
+      }
+    }
+    // Standard-Arbeitsmenge: ohne 45' HC (40' HC ist der groesste Standard und das "Arbeitspferd").
+    // Nur im Ausnahmefall (need45) bleibt der 45' HC fuer Einzel- und Kombi-Empfehlung dabei.
+    const stdOrder = need45 ? order : order.filter((o) => o.name !== "45' HC");
+    const workhorse = stdOrder[stdOrder.length - 1];
+    for (const o of stdOrder) {
       const r = packCargo(o.p, cargo, { noHint: true, quick: true });
       if (r.boxes >= totalBoxes) return { type: "single", name: o.name, preset: o.p };
     }
-    const largest = order[order.length - 1];
     for (const t of cargo) {
       if (num(t.qty) > 0) {
-        const one = packCargo(largest.p, [{ ...t, qty: 1 }], { noHint: true, quick: true });
-        if (one.boxes === 0) return { type: "toobig", name: largest.name, item: t.name };
+        const one = packCargo(absLargest.p, [{ ...t, qty: 1 }], { noHint: true, quick: true });
+        if (one.boxes === 0) return { type: "toobig", name: absLargest.name, item: t.name };
       }
     }
     let remaining = cargo.map((t) => ({ ...t, qty: Math.max(0, Math.floor(num(t.qty))) }));
@@ -394,7 +409,7 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       const tot = remaining.reduce((s, t) => s + t.qty, 0);
       if (tot === 0) break;
       let fit = null;
-      for (const o of order) {
+      for (const o of stdOrder) {
         const r2 = packCargo(o.p, remaining, { noHint: true, quick: true });
         if (r2.boxes >= tot) {
           fit = o;
@@ -405,12 +420,12 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
         used[fit.name] = (used[fit.name] || 0) + 1;
         break;
       }
-      const r = packCargo(largest.p, remaining, { noHint: true, quick: true });
+      const r = packCargo(workhorse.p, remaining, { noHint: true, quick: true });
       if (r.boxes === 0) break;
-      used[largest.name] = (used[largest.name] || 0) + 1;
+      used[workhorse.name] = (used[workhorse.name] || 0) + 1;
       remaining = remaining.map((t, i) => ({ ...t, qty: t.qty - (r.perType[i]?.loaded || 0) }));
     }
-    const combo = order.slice().reverse().filter((o) => used[o.name]).map((o) => ({ name: o.name, count: used[o.name] }));
+    const combo = stdOrder.slice().reverse().filter((o) => used[o.name]).map((o) => ({ name: o.name, count: used[o.name] }));
     return { type: "multi", combo };
   }
   var LANG = (() => {
