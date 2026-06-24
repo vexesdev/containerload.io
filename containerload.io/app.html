@@ -479,7 +479,8 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       recSingle: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, "Empfehlung: ein ", /* @__PURE__ */ React.createElement("b", { style: { color: "#9ecbff" } }, n), " \u2014 dann passt alles rein."),
       recMulti: (c) => /* @__PURE__ */ React.createElement(React.Fragment, null, "Du brauchst ca. ", /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, c), "."),
       recTooBig: (i) => /* @__PURE__ */ React.createElement(React.Fragment, null, "\u201E", i, '" ist gr\xF6\xDFer als jeder Standard-Container.'),
-      recNoFit: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, n), " Packst\xFCcke passen nicht rein.")
+      recNoFit: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, n), " Packst\xFCcke passen nicht rein."),
+      viewMore: (n) => `≈ ${n} weitere Container n\xF6tig`
     },
     en: {
       sub: "Loading in seconds",
@@ -539,7 +540,8 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       recSingle: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, "Recommendation: one ", /* @__PURE__ */ React.createElement("b", { style: { color: "#9ecbff" } }, n), " \u2014 then it all fits."),
       recMulti: (c) => /* @__PURE__ */ React.createElement(React.Fragment, null, "You need approx. ", /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, c), "."),
       recTooBig: (i) => /* @__PURE__ */ React.createElement(React.Fragment, null, '"', i, '" is larger than any standard container.'),
-      recNoFit: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, n), " items don't fit.")
+      recNoFit: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, n), " items don't fit."),
+      viewMore: (n) => `≈ ${n} more containers needed`
     }
   };
   var T = I18N[LANG];
@@ -779,6 +781,9 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       key.shadow.camera.top = 14;
       key.shadow.camera.bottom = -14;
       key.shadow.bias = -4e-4;
+      const keyTarget = new THREE.Object3D();
+      scene.add(keyTarget);
+      key.target = keyTarget;
       scene.add(key);
       const fill = new THREE.DirectionalLight(7317759, 0.34);
       fill.position.set(-9, 5, -7);
@@ -839,14 +844,28 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
         cur.theta += (sph.theta - cur.theta) * 0.12;
         cur.phi += (sph.phi - cur.phi) * 0.12;
         applyCam();
+        group.children.forEach((cg) => {
+          const ud = cg.userData;
+          if (ud && ud.popStart) {
+            let p = (now - ud.popStart) / 420;
+            p = p < 0 ? 0 : p > 1 ? 1 : p;
+            const e = 1 - Math.pow(1 - p, 3);
+            cg.scale.setScalar(1e-3 + e * (1 - 1e-3));
+            if (p >= 1) {
+              cg.scale.setScalar(1);
+              ud.popStart = 0;
+            }
+          }
+        });
         const rv = reveal.current;
         if (rv.animate) {
           const el = (now - rv.start) / 1e3, dur = 0.4, stag = 0.55;
           let any = false;
-          group.children.forEach((ch) => {
-            if (ch.userData && ch.userData.boxes) {
+          group.children.forEach((cg) => {
+            if (!cg.userData || !cg.userData.reveal || !cg.userData.boxMeshes) return;
+            cg.userData.boxMeshes.forEach((bm) => {
               any = true;
-              const arr = ch.userData.boxes, dm = ch.userData.dummy, N = Math.max(1, arr.length);
+              const arr = bm.boxes, dm = bm.dummy, N = Math.max(1, arr.length);
               for (let i = 0; i < arr.length; i++) {
                 const b = arr[i];
                 const delay = i / N * stag;
@@ -856,24 +875,25 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
                 dm.position.set(b.cx, b.cy, b.cz);
                 dm.scale.set(b.sx * e2, b.sy * e2, b.sz * e2);
                 dm.updateMatrix();
-                ch.setMatrixAt(i, dm.matrix);
+                bm.inst.setMatrixAt(i, dm.matrix);
               }
-              ch.instanceMatrix.needsUpdate = true;
-            }
+              bm.inst.instanceMatrix.needsUpdate = true;
+            });
           });
           if (!any || el > dur + stag + 0.06) {
-            group.children.forEach((ch) => {
-              if (ch.userData && ch.userData.boxes) {
-                const arr = ch.userData.boxes, dm = ch.userData.dummy;
+            group.children.forEach((cg) => {
+              if (!cg.userData || !cg.userData.boxMeshes) return;
+              cg.userData.boxMeshes.forEach((bm) => {
+                const arr = bm.boxes, dm = bm.dummy;
                 for (let i = 0; i < arr.length; i++) {
                   const b = arr[i];
                   dm.position.set(b.cx, b.cy, b.cz);
                   dm.scale.set(b.sx, b.sy, b.sz);
                   dm.updateMatrix();
-                  ch.setMatrixAt(i, dm.matrix);
+                  bm.inst.setMatrixAt(i, dm.matrix);
                 }
-                ch.instanceMatrix.needsUpdate = true;
-              }
+                bm.inst.instanceMatrix.needsUpdate = true;
+              });
             });
             rv.animate = false;
           }
@@ -891,7 +911,7 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
         }
       });
       ro.observe(mount);
-      three.current = { scene, camera, group, target, sph, cur, applyCam };
+      three.current = { scene, camera, group, target, sph, cur, applyCam, key, keyTarget };
       return () => {
         cancelAnimationFrame(raf);
         ro.disconnect();
@@ -907,19 +927,23 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       const t = three.current;
       if (!t) return;
       const { group } = t;
-      while (group.children.length) {
-        const c = group.children.pop();
-        c.geometry?.dispose?.();
-        const _ms = Array.isArray(c.material) ? c.material : [c.material];
-        _ms.forEach((m) => {
-          if (m && m.map && m.map.dispose) m.map.dispose();
-          if (m && m.dispose) m.dispose();
-        });
-      }
+      const gset = new Set(), mset = new Set();
+      group.traverse((o) => {
+        if (o.geometry) gset.add(o.geometry);
+        const _ms = Array.isArray(o.material) ? o.material : o.material ? [o.material] : [];
+        _ms.forEach((m) => mset.add(m));
+      });
+      gset.forEach((g) => g.dispose && g.dispose());
+      mset.forEach((m) => {
+        if (m.map && m.map.dispose) m.map.dispose();
+        if (m.dispose) m.dispose();
+      });
+      while (group.children.length) group.remove(group.children[group.children.length - 1]);
       const CL = num(container.l) / 100, CH = num(container.h) / 100, CW = num(container.w) / 100;
       if (CL <= 0 || CH <= 0 || CW <= 0) return;
       const cx = CL / 2, cy = CH / 2, cz = CW / 2;
       const STEEL = 3359322, FRAME = 4873598;
+      const REDUCED = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
       const mkRib = (rep) => {
         const cv = document.createElement("canvas");
         cv.width = 256;
@@ -936,105 +960,167 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
         t2.repeat.set(Math.max(2, Math.round(rep)), 1);
         return t2;
       };
-      const addWall = (w, h, wx, wy, wz, roty, rep, op) => {
-        const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: mkRib(rep), color: STEEL, transparent: true, opacity: op, depthWrite: false, roughness: 0.8, metalness: 0.28, side: THREE.DoubleSide }));
-        m.position.set(wx, wy, wz);
-        if (roty) m.rotation.y = roty;
-        group.add(m);
-        return m;
-      };
-      addWall(CL, CH, cx, cy, 0, 0, CL * 4, 0.15);
-      addWall(CL, CH, cx, cy, CW, 0, CL * 4, 0.15);
-      addWall(CW, CH, 0, cy, cz, Math.PI / 2, CW * 4, 0.16);
-      addWall(CW, CH, CL, cy, cz, Math.PI / 2, CW * 4, 0.1);
-      const roof = new THREE.Mesh(new THREE.PlaneGeometry(CL, CW), new THREE.MeshStandardMaterial({ color: STEEL, transparent: true, opacity: 0.05, depthWrite: false, side: THREE.DoubleSide }));
-      roof.rotation.x = -Math.PI / 2;
-      roof.position.set(cx, CH, cz);
-      group.add(roof);
-      const floor = new THREE.Mesh(new THREE.PlaneGeometry(CL, CW), new THREE.MeshStandardMaterial({ color: 2107962, roughness: 0.9, metalness: 0.12 }));
-      floor.rotation.x = -Math.PI / 2;
-      floor.position.set(cx, 5e-3, cz);
-      floor.receiveShadow = true;
-      group.add(floor);
-      const fmat = new THREE.MeshStandardMaterial({ color: FRAME, roughness: 0.5, metalness: 0.5 });
       const P = 0.055;
-      [[0, 0], [CL, 0], [0, CW], [CL, CW]].forEach((c2) => {
-        const b = new THREE.Mesh(new THREE.BoxGeometry(P, CH, P), fmat);
-        b.position.set(c2[0], cy, c2[1]);
-        b.castShadow = true;
-        group.add(b);
-      });
-      [0, CH].forEach((y) => {
-        const a1 = new THREE.Mesh(new THREE.BoxGeometry(CL + P, P, P), fmat);
-        a1.position.set(cx, y, 0);
-        group.add(a1);
-        const a2 = new THREE.Mesh(new THREE.BoxGeometry(CL + P, P, P), fmat);
-        a2.position.set(cx, y, CW);
-        group.add(a2);
-        const b1 = new THREE.Mesh(new THREE.BoxGeometry(P, P, CW + P), fmat);
-        b1.position.set(0, y, cz);
-        group.add(b1);
-        const b2 = new THREE.Mesh(new THREE.BoxGeometry(P, P, CW + P), fmat);
-        b2.position.set(CL, y, cz);
-        group.add(b2);
-      });
-      const seam = new THREE.Mesh(new THREE.BoxGeometry(0.03, CH * 0.94, 0.03), fmat);
-      seam.position.set(CL + 2e-3, cy, cz);
-      group.add(seam);
-      const topEdge = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(CL, CW)), new THREE.LineBasicMaterial({ color: 7312324, transparent: true, opacity: 0.55 }));
-      topEdge.rotation.x = -Math.PI / 2;
-      topEdge.position.set(cx, CH + 1e-3, cz);
-      group.add(topEdge);
-      const grid = new THREE.GridHelper(Math.ceil(Math.max(CL, CW)) + 2, Math.ceil(Math.max(CL, CW)) + 2, 2899024, 1449771);
-      grid.position.set(cx, 2e-3, cz);
-      grid.material.transparent = true;
-      grid.material.opacity = 0.5;
-      group.add(grid);
-      const placed = result?.placed || [];
-      const byType = {};
-      placed.forEach((p) => (byType[p.ti] = byType[p.ti] || []).push(p));
-      const willAnimate = placed.length > 0 && placed.length <= 280 && placed.length !== reveal.current.prevN;
-      reveal.current.prevN = placed.length;
+      // Gemeinsame Geometrien/Materialien/Texturen – einmal erzeugt und für jede Container-Hülle wiederverwendet.
+      const texSide = mkRib(CL * 4), texEnd = mkRib(CW * 4);
+      const wallMat = (tex, op) => new THREE.MeshStandardMaterial({ map: tex, color: STEEL, transparent: true, opacity: op, depthWrite: false, roughness: 0.8, metalness: 0.28, side: THREE.DoubleSide });
+      const matSide = wallMat(texSide, 0.15), matEndA = wallMat(texEnd, 0.16), matEndB = wallMat(texEnd, 0.1);
+      const matRoof = new THREE.MeshStandardMaterial({ color: STEEL, transparent: true, opacity: 0.05, depthWrite: false, side: THREE.DoubleSide });
+      const matFloor = new THREE.MeshStandardMaterial({ color: 2107962, roughness: 0.9, metalness: 0.12 });
+      const fmat = new THREE.MeshStandardMaterial({ color: FRAME, roughness: 0.5, metalness: 0.5 });
+      const matTop = new THREE.LineBasicMaterial({ color: 7312324, transparent: true, opacity: 0.55 });
+      const geoWallSide = new THREE.PlaneGeometry(CL, CH), geoWallEnd = new THREE.PlaneGeometry(CW, CH), geoRoof = new THREE.PlaneGeometry(CL, CW);
+      const geoCol = new THREE.BoxGeometry(P, CH, P), geoBeamL = new THREE.BoxGeometry(CL + P, P, P), geoBeamW = new THREE.BoxGeometry(P, P, CW + P), geoSeam = new THREE.BoxGeometry(0.03, CH * 0.94, 0.03);
+      const planeTop = new THREE.PlaneGeometry(CL, CW), geoTop = new THREE.EdgesGeometry(planeTop);
+      planeTop.dispose();
+      const gridProto = new THREE.GridHelper(Math.ceil(Math.max(CL, CW)) + 2, Math.ceil(Math.max(CL, CW)) + 2, 2899024, 1449771);
+      gridProto.material.transparent = true;
+      gridProto.material.opacity = 0.5;
+      const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+      const typeMats = {};
+      const typeMat = (ti) => typeMats[ti] || (typeMats[ti] = new THREE.MeshStandardMaterial({ color: new THREE.Color(TYPE_COLORS[ti % TYPE_COLORS.length]), roughness: 0.62, metalness: 0.08 }));
+      const addShell = (parent) => {
+        const w1 = new THREE.Mesh(geoWallSide, matSide);
+        w1.position.set(cx, cy, 0);
+        parent.add(w1);
+        const w2 = new THREE.Mesh(geoWallSide, matSide);
+        w2.position.set(cx, cy, CW);
+        parent.add(w2);
+        const w3 = new THREE.Mesh(geoWallEnd, matEndA);
+        w3.position.set(0, cy, cz);
+        w3.rotation.y = Math.PI / 2;
+        parent.add(w3);
+        const w4 = new THREE.Mesh(geoWallEnd, matEndB);
+        w4.position.set(CL, cy, cz);
+        w4.rotation.y = Math.PI / 2;
+        parent.add(w4);
+        const roof = new THREE.Mesh(geoRoof, matRoof);
+        roof.rotation.x = -Math.PI / 2;
+        roof.position.set(cx, CH, cz);
+        parent.add(roof);
+        const floor = new THREE.Mesh(geoRoof, matFloor);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.set(cx, 5e-3, cz);
+        floor.receiveShadow = true;
+        parent.add(floor);
+        [[0, 0], [CL, 0], [0, CW], [CL, CW]].forEach((c2) => {
+          const b = new THREE.Mesh(geoCol, fmat);
+          b.position.set(c2[0], cy, c2[1]);
+          b.castShadow = true;
+          parent.add(b);
+        });
+        [0, CH].forEach((y) => {
+          const a1 = new THREE.Mesh(geoBeamL, fmat);
+          a1.position.set(cx, y, 0);
+          parent.add(a1);
+          const a2 = new THREE.Mesh(geoBeamL, fmat);
+          a2.position.set(cx, y, CW);
+          parent.add(a2);
+          const b1 = new THREE.Mesh(geoBeamW, fmat);
+          b1.position.set(0, y, cz);
+          parent.add(b1);
+          const b2 = new THREE.Mesh(geoBeamW, fmat);
+          b2.position.set(CL, y, cz);
+          parent.add(b2);
+        });
+        const seam = new THREE.Mesh(geoSeam, fmat);
+        seam.position.set(CL + 2e-3, cy, cz);
+        parent.add(seam);
+        const te = new THREE.LineSegments(geoTop, matTop);
+        te.rotation.x = -Math.PI / 2;
+        te.position.set(cx, CH + 1e-3, cz);
+        parent.add(te);
+        const g = new THREE.LineSegments(gridProto.geometry, gridProto.material);
+        g.position.set(cx, 2e-3, cz);
+        parent.add(g);
+      };
       const gap = 0.02;
       const dummy = new THREE.Object3D();
-      Object.entries(byType).forEach(([ti, arr]) => {
-        const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(TYPE_COLORS[ti % TYPE_COLORS.length]), roughness: 0.62, metalness: 0.08 });
-        const inst = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), mat, arr.length);
-        inst.castShadow = true;
-        inst.receiveShadow = true;
-        const boxes = arr.map((p) => {
-          const dx = p.dx / 100, dy = p.dy / 100, dz = p.dz / 100;
-          return { cx: p.x / 100 + dx / 2, cy: p.y / 100 + dy / 2, cz: p.z / 100 + dz / 2, sx: Math.max(dx - gap, 0.01), sy: Math.max(dy - gap, 0.01), sz: Math.max(dz - gap, 0.01) };
+      const placedList = [result?.placed || [], ...(result?.extra || []).map((e) => e.placed || [])].slice(0, 4);
+      const placed0 = placedList[0] || [];
+      const willAnimate = !REDUCED && placed0.length > 0 && placed0.length <= 280 && placed0.length !== reveal.current.prevN;
+      reveal.current.prevN = placed0.length;
+      const gapX = Math.max(0.5, CL * 0.16), step = CL + gapX;
+      const prevC = reveal.current.prevContainers || 0;
+      placedList.forEach((pl, ci) => {
+        const cg = new THREE.Group();
+        cg.position.x = ci * step;
+        addShell(cg);
+        const byType = {};
+        pl.forEach((p) => (byType[p.ti] = byType[p.ti] || []).push(p));
+        const boxMeshes = [];
+        Object.entries(byType).forEach(([ti, arr]) => {
+          const inst = new THREE.InstancedMesh(boxGeo, typeMat(ti), arr.length);
+          inst.castShadow = true;
+          inst.receiveShadow = true;
+          const boxes = arr.map((p) => {
+            const dx = p.dx / 100, dy = p.dy / 100, dz = p.dz / 100;
+            return { cx: p.x / 100 + dx / 2, cy: p.y / 100 + dy / 2, cz: p.z / 100 + dz / 2, sx: Math.max(dx - gap, 0.01), sy: Math.max(dy - gap, 0.01), sz: Math.max(dz - gap, 0.01) };
+          });
+          const s = ci === 0 && willAnimate ? 1e-4 : 1;
+          boxes.forEach((b, i) => {
+            dummy.position.set(b.cx, b.cy, b.cz);
+            dummy.scale.set(b.sx * s, b.sy * s, b.sz * s);
+            dummy.updateMatrix();
+            inst.setMatrixAt(i, dummy.matrix);
+          });
+          inst.instanceMatrix.needsUpdate = true;
+          cg.add(inst);
+          boxMeshes.push({ inst, boxes, dummy });
         });
-        boxes.forEach((b, i) => {
-          const s = willAnimate ? 1e-4 : 1;
-          dummy.position.set(b.cx, b.cy, b.cz);
-          dummy.scale.set(b.sx * s, b.sy * s, b.sz * s);
-          dummy.updateMatrix();
-          inst.setMatrixAt(i, dummy.matrix);
-        });
-        inst.instanceMatrix.needsUpdate = true;
-        inst.userData = { boxes, dummy };
-        group.add(inst);
+        const isNew = !REDUCED && ci >= 1 && ci >= prevC;
+        cg.userData = { boxMeshes, reveal: ci === 0 && willAnimate, popStart: isNew ? performance.now() + (ci - Math.max(1, prevC)) * 120 : 0 };
+        if (isNew) cg.scale.setScalar(1e-3);
+        group.add(cg);
       });
-      if (willAnimate) reveal.current = { ...reveal.current, start: performance.now(), animate: true };
-      const dimKey = `${CL}-${CH}-${CW}`;
+      if (willAnimate) {
+        reveal.current.start = performance.now();
+        reveal.current.animate = true;
+      }
+      reveal.current.prevContainers = placedList.length;
+      const n = placedList.length, rowW = (n - 1) * step + CL, rowCx = rowW / 2;
+      t.frame = { cx: rowCx, cy, cz, r: Math.sqrt(rowW * rowW + CH * CH + CW * CW) * (n > 1 ? 1.25 : 1.42) };
+      // Nebel & Schatten an die Szenengröße anpassen (Einzelcontainer bleibt unverändert).
+      if (t.scene && t.scene.fog) {
+        t.scene.fog.near = n > 1 ? Math.max(16, t.frame.r * 0.8) : 16;
+        t.scene.fog.far = n > 1 ? t.frame.r + rowW + 14 : 46;
+      }
+      if (t.key) {
+        const half = n > 1 ? Math.max(14, rowW * 0.62) : 14;
+        const sc = t.key.shadow.camera;
+        sc.left = -half;
+        sc.right = half;
+        sc.top = half;
+        sc.bottom = -half;
+        sc.far = n > 1 ? 70 + rowW : 70;
+        sc.updateProjectionMatrix();
+        const lx = n > 1 ? rowCx : 0, lz = n > 1 ? cz : 0;
+        t.key.position.set(lx + 7, 17, lz + 9);
+        t.keyTarget.position.set(lx, 0, lz);
+        t.keyTarget.updateMatrixWorld();
+      }
+      const dimKey = `${CL}-${CH}-${CW}-${n}`;
       if (lastDims.current !== dimKey) {
         lastDims.current = dimKey;
-        t.target.set(cx, cy, cz);
-        t.sph.r = Math.sqrt(CL * CL + CH * CH + CW * CW) * 1.42;
+        t.target.set(rowCx, cy, cz);
+        t.sph.r = t.frame.r;
       }
     }, [result, container]);
     const reset = () => {
       const t = three.current;
       if (!t) return;
-      const CL = num(container.l) / 100, CH = num(container.h) / 100, CW = num(container.w) / 100;
-      t.target.set(CL / 2, CH / 2, CW / 2);
-      t.sph.r = Math.sqrt(CL * CL + CH * CH + CW * CW) * 1.42;
+      if (t.frame) {
+        t.target.set(t.frame.cx, t.frame.cy, t.frame.cz);
+        t.sph.r = t.frame.r;
+      } else {
+        const CL = num(container.l) / 100, CH = num(container.h) / 100, CW = num(container.w) / 100;
+        t.target.set(CL / 2, CH / 2, CW / 2);
+        t.sph.r = Math.sqrt(CL * CL + CH * CH + CW * CW) * 1.42;
+      }
       t.sph.theta = -0.92;
       t.sph.phi = 1;
     };
-    return /* @__PURE__ */ React.createElement("div", { className: "relative w-full h-full" }, /* @__PURE__ */ React.createElement("div", { ref: mountRef, className: "w-full h-full", style: { background: "radial-gradient(120% 80% at 50% 0%, #101a2b 0%, #0a0f17 55%, #070a0f 100%)" } }), /* @__PURE__ */ React.createElement("div", { className: "absolute inset-0 pointer-events-none", style: { background: "radial-gradient(75% 70% at 50% 45%, transparent 55%, rgba(4,7,11,0.55) 100%)" } }), /* @__PURE__ */ React.createElement("div", { className: "absolute bottom-3 left-4 text-[10px] tracking-[0.18em] uppercase pointer-events-none", style: { fontFamily: MONO, color: C.faint } }, "ziehen \xB7 scrollen"), /* @__PURE__ */ React.createElement("button", { onClick: reset, className: "absolute top-3 right-3 w-8 h-8 rounded-lg flex items-center justify-center transition hover:brightness-125", style: { background: hexA("#0c121c", 0.8), border: `1px solid ${hexA(C.accent, 0.3)}`, color: C.dim, backdropFilter: "blur(6px)" }, title: "Ansicht zur\xFCcksetzen" }, "\u27F3"));
+    return /* @__PURE__ */ React.createElement("div", { className: "relative w-full h-full" }, /* @__PURE__ */ React.createElement("div", { ref: mountRef, className: "w-full h-full", style: { background: "radial-gradient(120% 80% at 50% 0%, #101a2b 0%, #0a0f17 55%, #070a0f 100%)" } }), /* @__PURE__ */ React.createElement("div", { className: "absolute inset-0 pointer-events-none", style: { background: "radial-gradient(75% 70% at 50% 45%, transparent 55%, rgba(4,7,11,0.55) 100%)" } }), /* @__PURE__ */ React.createElement("div", { className: "absolute bottom-3 left-4 text-[10px] tracking-[0.18em] uppercase pointer-events-none", style: { fontFamily: MONO, color: C.faint } }, "ziehen \xB7 scrollen"), result && result.moreContainers > 0 && /* @__PURE__ */ React.createElement("div", { className: "absolute bottom-3 left-1/2 pointer-events-none", style: { transform: "translateX(-50%)", fontFamily: MONO, fontSize: 10, letterSpacing: "0.03em", color: C.warn, background: hexA("#0c121c", 0.82), border: `1px solid ${hexA(C.warn, 0.4)}`, borderRadius: 8, padding: "4px 9px", backdropFilter: "blur(6px)" } }, T.viewMore(result.moreContainers)), /* @__PURE__ */ React.createElement("button", { onClick: reset, className: "absolute top-3 right-3 w-8 h-8 rounded-lg flex items-center justify-center transition hover:brightness-125", style: { background: hexA("#0c121c", 0.8), border: `1px solid ${hexA(C.accent, 0.3)}`, color: C.dim, backdropFilter: "blur(6px)" }, title: "Ansicht zur\xFCcksetzen" }, "\u27F3"));
   }
   var Label = ({ children }) => /* @__PURE__ */ React.createElement("span", { className: "block mb-1.5", style: { fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", color: C.dim } }, children);
   var Num = ({ value, onChange, mono = true }) => /* @__PURE__ */ React.createElement(
@@ -1095,6 +1181,30 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       const t = setTimeout(() => {
         const r = packCargo(container, cargo);
         if (r.boxes < r.totalBoxes && r.totalBoxes > 0 && !r.rotHintAll) r.suggestion = suggestContainer(cargo);
+        // 3D-Ansicht: ehrliche Verteilung der Restladung auf weitere Container (gleicher Typ),
+        // gedeckelt auf MAXVIS dargestellte Hüllen. Es wird nichts an der Pack-Logik geändert –
+        // packCargo wird nur erneut auf die jeweils verbleibende Ladung angewendet.
+        const MAXVIS = 4;
+        r.extra = [];
+        r.moreContainers = 0;
+        if (r.boxes < r.totalBoxes && r.totalBoxes > 0) {
+          let remaining = cargo.map((tt, i) => ({ ...tt, qty: Math.max(0, Math.floor(num(tt.qty))) - (r.perType[i]?.loaded || 0) }));
+          let rem = remaining.reduce((s, tt) => s + tt.qty, 0);
+          let shownPlaced = r.boxes, shownCount = 1;
+          while (rem > 0 && r.extra.length < MAXVIS - 1) {
+            const rr = packCargo(container, remaining);
+            if (rr.boxes === 0) break;
+            r.extra.push(rr);
+            shownPlaced += rr.boxes;
+            shownCount++;
+            remaining = remaining.map((tt, i) => ({ ...tt, qty: tt.qty - (rr.perType[i]?.loaded || 0) }));
+            rem = remaining.reduce((s, tt) => s + tt.qty, 0);
+          }
+          if (rem > 0) {
+            const avg = shownPlaced / shownCount;
+            r.moreContainers = avg > 0 ? Math.max(1, Math.ceil(rem / avg)) : 1;
+          }
+        }
         setResult(r);
       }, 200);
       return () => clearTimeout(t);
