@@ -811,10 +811,11 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
     const names = Object.keys(PRESETS);
     const isCustomMain = isMain && !PRESETS[mainPreset];
     const val = isMain ? isCustomMain ? "__custom" : mainPreset : overrides && overrides[idx] ? overrides[idx] : "__auto";
+    const optStyle = { background: "#0c121c", color: C.text };
     const opts = [];
-    if (!isMain) opts.push(/* @__PURE__ */ React.createElement("option", { key: "__auto", value: "__auto" }, T.autoCont + " \xB7 " + (name || "")));
-    if (isCustomMain) opts.push(/* @__PURE__ */ React.createElement("option", { key: "__custom", value: "__custom", disabled: true }, "Custom"));
-    names.forEach((nm) => opts.push(/* @__PURE__ */ React.createElement("option", { key: nm, value: nm }, nm)));
+    if (!isMain) opts.push(/* @__PURE__ */ React.createElement("option", { key: "__auto", value: "__auto", style: optStyle }, T.autoCont + " \xB7 " + (name || "")));
+    if (isCustomMain) opts.push(/* @__PURE__ */ React.createElement("option", { key: "__custom", value: "__custom", disabled: true, style: { background: "#0c121c", color: C.dim } }, "Custom"));
+    names.forEach((nm) => opts.push(/* @__PURE__ */ React.createElement("option", { key: nm, value: nm, style: optStyle }, nm)));
     return /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1 rounded-lg px-1.5 py-1", style: { pointerEvents: "auto", background: hexA("#0c121c", 0.88), border: "1px solid #243042", backdropFilter: "blur(6px)" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: MONO, fontSize: 9, color: C.faint } }, "C" + (idx + 1)), /* @__PURE__ */ React.createElement("select", { value: val, onChange: (e) => onPick(idx, e.target.value), style: { background: "transparent", color: C.text, border: "none", outline: "none", fontFamily: MONO, fontSize: 10.5, fontWeight: 600, cursor: "pointer" } }, opts));
   }
   function Viewport({ container, result, preset, overrides, onSlotType }) {
