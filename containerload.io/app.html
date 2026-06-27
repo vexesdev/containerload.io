@@ -97,6 +97,29 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
     platform: { panels: { sides: false, ends: false, roof: false } }
   };
   var panelsFor = (k) => (EQUIP[k] || EQUIP.dry).panels;
+  // Container-Auswahl: Struktur rein aus PRESETS ableiten (kind + Laenge + GP/HC).
+  // Neue Presets (auch neue kinds) fliessen automatisch ein.
+  var KIND_ORDER = ["dry", "opentop", "flatrack", "platform", "reefer"];
+  var PICK = (function () {
+    var byKind = {};
+    Object.keys(PRESETS).forEach(function (p) {
+      var k = PRESETS[p].kind || "dry";
+      var L = (p.match(/^(\d+')/) || [])[1];
+      if (!L) return;
+      byKind[k] = byKind[k] || { lens: {} };
+      if (k === "dry") {
+        byKind[k].lens[L] = byKind[k].lens[L] || {};
+        byKind[k].lens[L][/HC/.test(p) ? "HC" : "GP"] = p;
+      } else {
+        byKind[k].lens[L] = { _: p };
+      }
+    });
+    return byKind;
+  })();
+  var KINDS_PRESENT = KIND_ORDER.filter(function (k) { return PICK[k]; });
+  var KIND_LABEL = (T) => ({ dry: T.kDry, opentop: T.kOpenTop, flatrack: T.kFlatRack, platform: T.kPlatform, reefer: T.kReefer });
+  var KIND_SUB = (T) => ({ dry: T.subDry, opentop: T.subOpenTop, flatrack: T.subFlatRack, platform: T.subPlatform, reefer: T.subReefer });
+  var KIND_META = (T) => ({ dry: null, opentop: T.metaOpenTop, flatrack: T.metaFlatRack, platform: T.metaPlatform, reefer: T.metaReefer });
   var TYPE_COLORS = ["#2f9bff", "#38e0c8", "#ffb454", "#c084fc", "#ff7a90", "#4dd0e1", "#a3e635", "#f472b6"];
   var C = {
     text: "#eef2f7",
@@ -620,6 +643,14 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       len: "L\xE4nge",
       wid: "Breite",
       hei: "H\xF6he",
+      ctType: "Typ", ctHeight: "H\xF6he", ctStandard: "Standard", ctHighCube: "High Cube",
+      ctAdjust: "Ma\xDFe anpassen", ctCustom: "Custom",
+      kDry: "Standard", kOpenTop: "Open Top", kFlatRack: "Flat Rack", kPlatform: "Platform", kReefer: "Reefer",
+      subDry: "GP / HC", subOpenTop: "Dach offen", subFlatRack: "Stirnw\xE4nde", subPlatform: "nur Deck", subReefer: "isoliert",
+      metaOpenTop: "Dach offen \xB7 \xDCberh\xF6he von oben", metaFlatRack: "Stirnw\xE4nde \xB7 \xDCberbreite / -h\xF6he",
+      metaPlatform: "Nur Deck \xB7 \xDCberl\xE4nge", metaReefer: "Isoliert \xB7 reduzierte Innenma\xDFe",
+      stVol: "Volumen", stPay: "Nutzlast", stDoor: "T\xFCr\xF6ffn.", stDeck: "Deck", stOpen: "Offen",
+      openRoof: "Dach", openSides: "Seiten", openAll: "rundum", ftUnit: "Fu\xDF", adjHint: "cm \xB7 eigene Ma\xDFe → schaltet auf „Custom“",
       cargo: "Ladung",
       addItem: "+ Packst\xFCck",
       qty: "Anzahl",
@@ -692,6 +723,14 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       len: "Length",
       wid: "Width",
       hei: "Height",
+      ctType: "Type", ctHeight: "Height", ctStandard: "Standard", ctHighCube: "High Cube",
+      ctAdjust: "Adjust size", ctCustom: "Custom",
+      kDry: "Standard", kOpenTop: "Open Top", kFlatRack: "Flat Rack", kPlatform: "Platform", kReefer: "Reefer",
+      subDry: "GP / HC", subOpenTop: "open roof", subFlatRack: "end walls", subPlatform: "deck only", subReefer: "insulated",
+      metaOpenTop: "Open roof \xB7 over-height from top", metaFlatRack: "End walls \xB7 over-width / -height",
+      metaPlatform: "Deck only \xB7 over-length", metaReefer: "Insulated \xB7 reduced inner size",
+      stVol: "Volume", stPay: "Payload", stDoor: "Door", stDeck: "Deck", stOpen: "Open",
+      openRoof: "roof", openSides: "sides", openAll: "all sides", ftUnit: "ft", adjHint: "cm \xB7 custom size → switches to “Custom”",
       cargo: "Cargo",
       addItem: "+ Item",
       qty: "Qty",
@@ -1460,18 +1499,98 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       }
     }
   );
-  function ContainerGlyph({ length, on }) {
+  function ContainerGlyph({ length, on, kind = "dry" }) {
     const steel = on ? "#8fc8ff" : "#5a6a7e";
     const line = on ? C.accent : "#3a4a5e";
     const W = 120, H = 44, bx = 3, by = 5, bh = H - 14, bw = W - 6, doorW = 18, bodyW = bw - doorW;
-    const ridges = Math.max(6, Math.round(length / 60));
-    const rl = [];
-    for (let k = 1; k < ridges; k++) {
-      const x = bx + bodyW * k / ridges;
-      rl.push(/* @__PURE__ */ React.createElement("line", { key: k, x1: x, y1: by + 3, x2: x, y2: by + bh - 3, stroke: line, strokeOpacity: on ? 0.5 : 0.32, strokeWidth: "1" }));
+    const cc = (a, b, k) => /* @__PURE__ */ React.createElement("rect", { key: k, x: a, y: b, width: "4.5", height: "4.5", rx: "1", fill: steel });
+    const els = [];
+    if (kind === "flatrack") {
+      const deckY = by + bh - 6;
+      els.push(/* @__PURE__ */ React.createElement("rect", { key: "dk", x: bx, y: deckY, width: bw, height: 6, fill: on ? "#15334e" : "#141b24", stroke: steel, strokeWidth: "1.3" }));
+      els.push(/* @__PURE__ */ React.createElement("rect", { key: "wl", x: bx, y: by, width: 6, height: bh - 6, fill: on ? "#0e2438" : "#0f1620", stroke: steel, strokeWidth: "1.3" }));
+      els.push(/* @__PURE__ */ React.createElement("rect", { key: "wr", x: bx + bw - 6, y: by, width: 6, height: bh - 6, fill: on ? "#0e2438" : "#0f1620", stroke: steel, strokeWidth: "1.3" }));
+    } else if (kind === "platform") {
+      const deckY = by + bh - 9;
+      els.push(/* @__PURE__ */ React.createElement("rect", { key: "dk", x: bx, y: deckY, width: bw, height: 9, fill: on ? "#15334e" : "#141b24", stroke: steel, strokeWidth: "1.3" }));
+      [0.25, 0.5, 0.75].forEach((f, i) => els.push(/* @__PURE__ */ React.createElement("line", { key: "p" + i, x1: bx + bw * f, y1: deckY, x2: bx + bw * f, y2: deckY + 9, stroke: line, strokeOpacity: 0.4, strokeWidth: "1" })));
+    } else {
+      // dry / reefer / opentop: geschlossener Korpus + Tuer rechts
+      els.push(/* @__PURE__ */ React.createElement("rect", { key: "b1", x: bx, y: by, width: bodyW, height: bh / 2, fill: on ? "#15334e" : "#141b24" }));
+      els.push(/* @__PURE__ */ React.createElement("rect", { key: "b2", x: bx, y: by + bh / 2, width: bodyW, height: bh / 2, fill: on ? "#0e2438" : "#0f1620" }));
+      els.push(/* @__PURE__ */ React.createElement("line", { key: "eL", x1: bx, y1: by, x2: bx, y2: by + bh, stroke: steel, strokeWidth: "1.3" }));
+      els.push(/* @__PURE__ */ React.createElement("line", { key: "eR", x1: bx + bodyW, y1: by, x2: bx + bodyW, y2: by + bh, stroke: steel, strokeWidth: "1.3" }));
+      els.push(/* @__PURE__ */ React.createElement("line", { key: "eB", x1: bx, y1: by + bh, x2: bx + bodyW, y2: by + bh, stroke: steel, strokeWidth: "1.3" }));
+      if (kind === "opentop") {
+        els.push(/* @__PURE__ */ React.createElement("line", { key: "eT", x1: bx, y1: by, x2: bx + bodyW, y2: by, stroke: steel, strokeWidth: "1.3", strokeDasharray: "3 2.5" }));
+        [0.28, 0.55, 0.82].forEach((f, i) => els.push(/* @__PURE__ */ React.createElement("line", { key: "tk" + i, x1: bx + bodyW * f, y1: by, x2: bx + bodyW * f, y2: by - 3, stroke: steel, strokeWidth: "1" })));
+      } else {
+        els.push(/* @__PURE__ */ React.createElement("line", { key: "eT", x1: bx, y1: by, x2: bx + bodyW, y2: by, stroke: steel, strokeWidth: "1.3" }));
+        const ridges = Math.max(6, Math.round(length / 60));
+        for (let k = 1; k < ridges; k++) { const x = bx + bodyW * k / ridges; els.push(/* @__PURE__ */ React.createElement("line", { key: "r" + k, x1: x, y1: by + 3, x2: x, y2: by + bh - 3, stroke: line, strokeOpacity: on ? 0.5 : 0.32, strokeWidth: "1" })); }
+      }
+      els.push(/* @__PURE__ */ React.createElement("rect", { key: "dr", x: bx + bodyW, y: by, width: doorW, height: bh, fill: on ? "#0b1f33" : "#0d141d", stroke: steel, strokeWidth: "1.3" }));
+      els.push(/* @__PURE__ */ React.createElement("line", { key: "d1", x1: bx + bodyW + doorW * 0.4, y1: by + 3, x2: bx + bodyW + doorW * 0.4, y2: by + bh - 3, stroke: line, strokeWidth: "1" }));
+      els.push(/* @__PURE__ */ React.createElement("line", { key: "d2", x1: bx + bodyW + doorW * 0.66, y1: by + 3, x2: bx + bodyW + doorW * 0.66, y2: by + bh - 3, stroke: line, strokeWidth: "1" }));
     }
-    const cc = (a, b) => /* @__PURE__ */ React.createElement("rect", { x: a, y: b, width: "4.5", height: "4.5", rx: "1", fill: steel });
-    return /* @__PURE__ */ React.createElement("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", style: { display: "block" } }, /* @__PURE__ */ React.createElement("rect", { x: bx, y: by, width: bodyW, height: bh / 2, fill: on ? "#15334e" : "#141b24" }), /* @__PURE__ */ React.createElement("rect", { x: bx, y: by + bh / 2, width: bodyW, height: bh / 2, fill: on ? "#0e2438" : "#0f1620" }), /* @__PURE__ */ React.createElement("rect", { x: bx, y: by, width: bodyW, height: bh, fill: "none", stroke: steel, strokeWidth: "1.3" }), rl, /* @__PURE__ */ React.createElement("rect", { x: bx + bodyW, y: by, width: doorW, height: bh, fill: on ? "#0b1f33" : "#0d141d", stroke: steel, strokeWidth: "1.3" }), /* @__PURE__ */ React.createElement("line", { x1: bx + bodyW + doorW * 0.4, y1: by + 3, x2: bx + bodyW + doorW * 0.4, y2: by + bh - 3, stroke: line, strokeWidth: "1" }), /* @__PURE__ */ React.createElement("line", { x1: bx + bodyW + doorW * 0.66, y1: by + 3, x2: bx + bodyW + doorW * 0.66, y2: by + bh - 3, stroke: line, strokeWidth: "1" }), cc(bx - 1, by - 1), cc(bx + bw - 3.5, by - 1), cc(bx - 1, by + bh - 3.5), cc(bx + bw - 3.5, by + bh - 3.5));
+    return /* @__PURE__ */ React.createElement("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", style: { display: "block" } }, els, cc(bx - 1, by - 1, "c1"), cc(bx + bw - 3.5, by - 1, "c2"), cc(bx - 1, by + bh - 3.5, "c3"), cc(bx + bw - 3.5, by + bh - 3.5, "c4"));
+  }
+  // Dreistufige Container-Auswahl (Typ -> Laenge -> Hoehe) + Summary + "Maße anpassen".
+  // Ruft weiterhin applyPreset(key)/setCont auf -> ?p=-Vertrag unveraendert.
+  function ContainerPicker({ preset, applyPreset, container, setCont, T }) {
+    const known = !!PRESETS[preset];
+    const cur = known ? {
+      kind: PRESETS[preset].kind || "dry",
+      len: (preset.match(/^(\d+')/) || [])[1],
+      hv: (PRESETS[preset].kind || "dry") === "dry" ? (/HC/.test(preset) ? "HC" : "GP") : null,
+      key: preset, custom: false
+    } : { kind: "dry", len: null, hv: null, key: null, custom: true };
+    const [adjOpen, setAdjOpen] = useState(cur.custom);
+    const LAB = KIND_LABEL(T), SUB = KIND_SUB(T), MET = KIND_META(T);
+    const lensOf = (k) => Object.keys(PICK[k].lens).sort((a, b) => parseInt(a) - parseInt(b));
+    const resolve = (k, L, hv) => {
+      const slot = PICK[k].lens[L];
+      if (!slot) { const f = lensOf(k)[0]; return resolve(k, f, hv); }
+      if (k === "dry") return slot[hv] || slot.HC || slot.GP || Object.values(slot)[0];
+      return slot._;
+    };
+    const pickKind = (k) => { const ls = lensOf(k); const L = ls.includes(cur.len) ? cur.len : ls.includes("40'") ? "40'" : ls[0]; applyPreset(resolve(k, L, cur.hv || "HC")); };
+    const pickLen = (L) => applyPreset(resolve(cur.kind, L, cur.hv || "HC"));
+    const pickHv = (hv) => applyPreset(resolve("dry", cur.len, hv));
+    const segWrap = { display: "flex", gap: 5, background: "#0c121c", border: "1px solid #18212e", borderRadius: 11, padding: 4, flex: 1 };
+    const segRow = { display: "flex", alignItems: "center", gap: 10, marginBottom: 9 };
+    const segKey = { fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: C.faint, width: 46, flexShrink: 0 };
+    const pill = (on, dis) => ({ flex: 1, border: 0, cursor: dis ? "not-allowed" : "pointer", lineHeight: 1.15, background: on ? "linear-gradient(135deg,rgba(47,155,255,.22),rgba(56,224,200,.16))" : "transparent", color: on ? "#eaf4ff" : C.dim, fontFamily: SANS, fontWeight: 700, fontSize: 12, padding: "8px 3px", borderRadius: 8, transition: ".18s", opacity: dis ? 0.3 : 1, boxShadow: on ? "0 4px 14px -6px rgba(47,155,255,.7), inset 0 0 0 1px rgba(47,155,255,.55)" : "none", whiteSpace: "nowrap" });
+    const sub = (on) => ({ display: "block", fontFamily: MONO, fontWeight: 500, fontSize: 7.5, letterSpacing: "0.04em", color: on ? "#7fb8ee" : C.faint, marginTop: 2 });
+    const Pill = (key, on, dis, label, subtxt, fn) => /* @__PURE__ */ React.createElement("button", { key, onClick: dis ? void 0 : fn, disabled: dis, style: pill(on, dis) }, label, subtxt);
+    const P = cur.custom ? container : PRESETS[cur.key];
+    const t = (kg) => (num(kg) / 1000).toFixed(1);
+    const name = cur.custom ? T.ctCustom : (cur.kind === "dry" ? (cur.len === "45'" ? "45' " + T.ctHighCube : cur.len + " " + (cur.hv === "HC" ? T.ctHighCube : T.ctStandard)) : cur.len + " " + LAB[cur.kind]);
+    const metaTxt = cur.custom ? "" : (MET[cur.kind] || (cur.key === "45' HC" ? "High Cube \xB7 Pallet-Wide" : (P.h >= 270 ? T.ctHighCube : "General Purpose")));
+    const stat = (k, v, sp, isTxt) => /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 7.5, letterSpacing: "0.1em", textTransform: "uppercase", color: C.faint, marginBottom: 4 } }, k), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: isTxt ? 11 : 13, fontWeight: 700, color: isTxt ? C.warn : C.text } }, v, sp ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, color: C.faint, fontWeight: 500 } }, sp) : null));
+    let stats;
+    if (cur.custom) {
+      stats = [stat(T.stVol, (num(P.l) * num(P.w) * num(P.h) / 1e6).toFixed(1), " m\xB3"), num(P.payload) > 0 ? stat(T.stPay, t(P.payload), " t") : stat(T.stDoor, "—"), stat("", T.ctCustom, "", true)];
+    } else if (cur.kind === "dry" || cur.kind === "reefer") {
+      stats = [stat(T.stVol, (P.l * P.w * P.h / 1e6).toFixed(1), " m\xB3"), stat(T.stPay, t(P.payload), " t"), P.door ? stat(T.stDoor, P.door.w, "\xD7" + P.door.h) : stat(T.stDeck, (P.l / 100).toFixed(2) + "\xD7" + (P.w / 100).toFixed(2), " m")];
+    } else if (cur.kind === "opentop") {
+      stats = [stat(T.stPay, t(P.payload), " t"), stat(T.stDoor, P.door.w, "\xD7" + P.door.h), stat(T.stOpen, T.openRoof, "", true)];
+    } else {
+      stats = [stat(T.stPay, t(P.payload), " t"), stat(T.stDeck, (P.l / 100).toFixed(2) + "\xD7" + (P.w / 100).toFixed(2), " m"), stat(T.stOpen, cur.kind === "flatrack" ? T.openSides : T.openAll, "", true)];
+    }
+    const dryLen = cur.kind === "dry" || cur.custom;
+    const lengths = lensOf(cur.custom ? "dry" : cur.kind);
+    return /* @__PURE__ */ React.createElement("div", { className: "p-5", style: { borderBottom: "1px solid #121925" } },
+      /* @__PURE__ */ React.createElement(SectionTitle, null, T.container),
+      /* @__PURE__ */ React.createElement("div", { style: segRow }, /* @__PURE__ */ React.createElement("span", { style: segKey }, T.ctType), /* @__PURE__ */ React.createElement("div", { style: segWrap }, KINDS_PRESENT.map((k) => Pill(k, cur.kind === k && !cur.custom, false, LAB[k], /* @__PURE__ */ React.createElement("small", { style: sub(cur.kind === k && !cur.custom) }, SUB[k]), () => pickKind(k))))),
+      /* @__PURE__ */ React.createElement("div", { style: segRow }, /* @__PURE__ */ React.createElement("span", { style: segKey }, T.len), /* @__PURE__ */ React.createElement("div", { style: segWrap }, lengths.map((L) => Pill(L, cur.len === L, false, L, /* @__PURE__ */ React.createElement("small", { style: sub(cur.len === L) }, L.replace("'", "") + " " + T.ftUnit), () => pickLen(L))))),
+      dryLen ? /* @__PURE__ */ React.createElement("div", { style: segRow }, /* @__PURE__ */ React.createElement("span", { style: segKey }, T.ctHeight), /* @__PURE__ */ React.createElement("div", { style: segWrap }, [["GP", T.ctStandard, "239 cm"], ["HC", T.ctHighCube, "270 cm"]].map(([v, lbl, cm]) => { const dis = !!cur.len && !(PICK.dry.lens[cur.len] && PICK.dry.lens[cur.len][v]); return Pill(v, cur.hv === v && !dis, dis, lbl, /* @__PURE__ */ React.createElement("small", { style: sub(cur.hv === v && !dis) }, dis ? "—" : cm), () => pickHv(v)); }))) : null,
+      /* @__PURE__ */ React.createElement("div", { style: { marginTop: 13, background: "linear-gradient(180deg,#0d1420,#0a0e16)", border: "1px solid #1c2737", borderRadius: 13, padding: 14 } },
+        /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 100, flexShrink: 0 } }, /* @__PURE__ */ React.createElement(ContainerGlyph, { length: num(P.l), on: true, kind: cur.custom ? "dry" : cur.kind })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, letterSpacing: "-0.01em", color: "#eaf4ff" } }, name), metaTxt ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 8.5, letterSpacing: "0.08em", textTransform: "uppercase", color: C.teal, marginTop: 3 } }, metaTxt) : null)),
+        /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 9, marginTop: 13, paddingTop: 12, borderTop: "1px solid #18212e" } }, stats)),
+      /* @__PURE__ */ React.createElement("div", { style: { marginTop: 11 } },
+        /* @__PURE__ */ React.createElement("button", { onClick: () => setAdjOpen((o) => !o), style: { width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, background: adjOpen ? hexA(C.accent, 0.08) : "#0c121c", border: `1px ${adjOpen ? "solid" : "dashed"} ${adjOpen ? hexA(C.accent, 0.45) : "#243246"}`, borderRadius: 11, padding: "9px 12px", cursor: "pointer", color: adjOpen ? "#bcd9ff" : C.dim, fontFamily: MONO, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", transition: ".18s" } }, /* @__PURE__ */ React.createElement("span", null, "⚙ ", T.ctAdjust), /* @__PURE__ */ React.createElement("span", { style: { transform: adjOpen ? "rotate(180deg)" : "none", transition: "transform .2s", fontSize: 11 } }, "▾")),
+        adjOpen ? /* @__PURE__ */ React.createElement("div", { style: { paddingTop: 10 } }, /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-3 gap-2" }, [["l", T.len], ["w", T.wid], ["h", T.hei]].map(([k, lbl]) => /* @__PURE__ */ React.createElement("div", { key: k }, /* @__PURE__ */ React.createElement(Label, null, lbl), /* @__PURE__ */ React.createElement(Num, { value: container[k], onChange: (v) => setCont(k, v) })))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 8, color: C.faint, marginTop: 8, letterSpacing: "0.04em" } }, T.adjHint)) : null));
   }
   function Gauge({ value, color }) {
     const r = 33, circ = 2 * Math.PI * r, off = circ * (1 - Math.min(100, Math.max(0, value)) / 100);
@@ -1681,31 +1800,7 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
         @keyframes clload2{0%{transform:scaleY(0)}100%{transform:scaleY(1)}}
         .cl-bar{transform-box:fill-box;transform-origin:50% 100%;animation:clload .5s cubic-bezier(.2,.8,.2,1) both}
         .cl-bar.b2{animation-delay:.13s}.cl-bar.b3{animation-delay:.26s}
-        .brandlogo:hover .cl-bar{animation-name:clload2}`), /* @__PURE__ */ React.createElement("header", { className: "flex items-center justify-between px-5 py-3 relative", style: { borderBottom: "1px solid #141c27" } }, /* @__PURE__ */ React.createElement("div", { className: "absolute bottom-0 left-0 h-px w-2/5", style: { background: `linear-gradient(90deg, ${C.accent}, transparent)` } }), /* @__PURE__ */ React.createElement("a", { href: EMBEDDED ? void 0 : homeHref, className: "brandlogo flex items-center gap-2.5", style: EMBEDDED ? void 0 : { cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { className: "w-8 h-8 rounded-lg flex items-center justify-center", style: { background: `linear-gradient(135deg, ${C.accent}, ${C.teal})`, boxShadow: `0 4px 16px -4px ${hexA(C.accent, 0.7)}` } }, /* @__PURE__ */ React.createElement("svg", { width: "18", height: "18", viewBox: "0 0 24 24" }, /* @__PURE__ */ React.createElement("rect", { x: "3", y: "7", width: "18", height: "11", rx: "1.5", fill: "none", stroke: "#04101f", strokeWidth: "2" }), /* @__PURE__ */ React.createElement("rect", { className: "cl-bar b1", x: "5", y: "9.3", width: "2.3", height: "6.4", rx: "0.5", fill: "#04101f" }), /* @__PURE__ */ React.createElement("rect", { className: "cl-bar b2", x: "7.9", y: "9.3", width: "2.3", height: "6.4", rx: "0.5", fill: "#04101f" }), /* @__PURE__ */ React.createElement("rect", { className: "cl-bar b3", x: "10.8", y: "9.3", width: "2.3", height: "6.4", rx: "0.5", fill: "#04101f" }))), /* @__PURE__ */ React.createElement("div", { className: "leading-none" }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, letterSpacing: "-0.02em" } }, "Container", /* @__PURE__ */ React.createElement("span", { style: { background: `linear-gradient(90deg, ${C.accent}, ${C.teal})`, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" } }, "Load")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 8.5, letterSpacing: "0.22em", textTransform: "uppercase", color: C.faint, marginTop: 3 } }, T.sub))), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2" }, !EMBEDDED && /* @__PURE__ */ React.createElement("a", { href: homeHref, title: T.backToSite, className: "flex items-center gap-1 px-2.5 py-1 rounded-md transition hover:brightness-125", style: { fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.1em", color: C.dim, border: "1px solid #1c2735" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, lineHeight: 1 } }, "\u2190"), T.backToSite), /* @__PURE__ */ React.createElement("button", { onClick: doShare, title: T.shareTitle, className: "flex items-center gap-1 px-2.5 py-1 rounded-md transition hover:brightness-125", style: { fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.1em", color: "#bcd9ff", background: hexA(C.accent, 0.12), border: `1px solid ${hexA(C.accent, 0.32)}` } }, /* @__PURE__ */ React.createElement("svg", { width: "11", height: "11", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.4", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "5", r: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "6", cy: "12", r: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "19", r: "3" }), /* @__PURE__ */ React.createElement("path", { d: "M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" })), T.shareBtn), /* @__PURE__ */ React.createElement("button", { onClick: buildLadevorschlag, title: T.pdfTitle, className: "flex items-center gap-1 px-2.5 py-1 rounded-md transition hover:brightness-125", style: { fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.1em", color: C.dim, border: "1px solid #1c2735" } }, /* @__PURE__ */ React.createElement("svg", { width: "11", height: "11", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }), /* @__PURE__ */ React.createElement("path", { d: "M14 2v6h6" }), /* @__PURE__ */ React.createElement("path", { d: "M8 13h8M8 17h6" })), T.pdfBtn), /* @__PURE__ */ React.createElement("span", { className: "hidden sm:inline px-2.5 py-1 rounded-md", style: { fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint, border: "1px solid #1c2735" } }, "ISO 668"))), /* @__PURE__ */ React.createElement("div", { className: "flex flex-col lg:flex-row flex-1 min-h-0" }, /* @__PURE__ */ React.createElement("aside", { className: "w-full lg:w-[384px] lg:flex-shrink-0 overflow-y-auto", style: { borderRight: "1px solid #141c27", maxHeight: "100vh" } }, /* @__PURE__ */ React.createElement("div", { className: "p-5", style: { borderBottom: "1px solid #121925" } }, /* @__PURE__ */ React.createElement(SectionTitle, null, T.container), /* @__PURE__ */ React.createElement("div", { className: "flex gap-2 overflow-x-auto pb-1.5 -mx-1 px-1" }, Object.keys(PRESETS).map((p) => {
-      const on = preset === p;
-      const vol = PRESETS[p].l * PRESETS[p].w * PRESETS[p].h / 1e6;
-      return /* @__PURE__ */ React.createElement(
-        "button",
-        {
-          key: p,
-          onClick: () => applyPreset(p),
-          className: "flex-shrink-0 flex items-center gap-2 rounded-xl pl-1.5 pr-3 py-1.5 transition-all duration-200",
-          title: META[p],
-          style: { background: on ? hexA(C.accent, 0.12) : "#0f1622", border: `1px solid ${on ? hexA(C.accent, 0.75) : "#1d2734"}`, boxShadow: on ? `0 6px 18px -8px ${hexA(C.accent, 0.6)}` : "none" }
-        },
-        /* @__PURE__ */ React.createElement("div", { style: { width: 44 } }, /* @__PURE__ */ React.createElement(ContainerGlyph, { length: PRESETS[p].l, on })),
-        /* @__PURE__ */ React.createElement("div", { className: "leading-tight text-left" }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11.5, fontWeight: 700, color: on ? "#d6e9ff" : "#c6d2e0" } }, p), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 8.5, color: on ? "#6fb0ee" : C.faint } }, vol.toFixed(1), " m\xB3"))
-      );
-    }), /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        onClick: () => setPreset("Custom"),
-        className: "flex-shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-1.5 transition-all duration-200",
-        style: { background: preset === "Custom" ? hexA(C.accent, 0.12) : "#0f1622", border: `1px solid ${preset === "Custom" ? hexA(C.accent, 0.75) : "#1d2734"}`, borderStyle: preset === "Custom" ? "solid" : "dashed" }
-      },
-      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: preset === "Custom" ? "#9ecbff" : C.faint } }, "\u2699"),
-      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11.5, fontWeight: 700, color: preset === "Custom" ? "#d6e9ff" : C.dim } }, "Custom")
-    )), /* @__PURE__ */ React.createElement("div", { className: "rounded-xl p-3 mt-2.5", style: { background: "#0a0e16", border: "1px solid #1a2330" } }, /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-3 gap-2 mb-2.5" }, [["l", T.len], ["w", T.wid], ["h", T.hei]].map(([k, lbl]) => /* @__PURE__ */ React.createElement("div", { key: k }, /* @__PURE__ */ React.createElement(Label, null, lbl), /* @__PURE__ */ React.createElement(Num, { value: container[k], onChange: (v) => setCont(k, v) })))))), /* @__PURE__ */ React.createElement("div", { className: "p-5" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 mb-3" }, /* @__PURE__ */ React.createElement(SectionTitle, { noMargin: true }, T.cargo), /* @__PURE__ */ React.createElement("span", { className: "h-px flex-1", style: { background: "linear-gradient(90deg,#1d2734,transparent)" } }), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+        .brandlogo:hover .cl-bar{animation-name:clload2}`), /* @__PURE__ */ React.createElement("header", { className: "flex items-center justify-between px-5 py-3 relative", style: { borderBottom: "1px solid #141c27" } }, /* @__PURE__ */ React.createElement("div", { className: "absolute bottom-0 left-0 h-px w-2/5", style: { background: `linear-gradient(90deg, ${C.accent}, transparent)` } }), /* @__PURE__ */ React.createElement("a", { href: EMBEDDED ? void 0 : homeHref, className: "brandlogo flex items-center gap-2.5", style: EMBEDDED ? void 0 : { cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { className: "w-8 h-8 rounded-lg flex items-center justify-center", style: { background: `linear-gradient(135deg, ${C.accent}, ${C.teal})`, boxShadow: `0 4px 16px -4px ${hexA(C.accent, 0.7)}` } }, /* @__PURE__ */ React.createElement("svg", { width: "18", height: "18", viewBox: "0 0 24 24" }, /* @__PURE__ */ React.createElement("rect", { x: "3", y: "7", width: "18", height: "11", rx: "1.5", fill: "none", stroke: "#04101f", strokeWidth: "2" }), /* @__PURE__ */ React.createElement("rect", { className: "cl-bar b1", x: "5", y: "9.3", width: "2.3", height: "6.4", rx: "0.5", fill: "#04101f" }), /* @__PURE__ */ React.createElement("rect", { className: "cl-bar b2", x: "7.9", y: "9.3", width: "2.3", height: "6.4", rx: "0.5", fill: "#04101f" }), /* @__PURE__ */ React.createElement("rect", { className: "cl-bar b3", x: "10.8", y: "9.3", width: "2.3", height: "6.4", rx: "0.5", fill: "#04101f" }))), /* @__PURE__ */ React.createElement("div", { className: "leading-none" }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800, letterSpacing: "-0.02em" } }, "Container", /* @__PURE__ */ React.createElement("span", { style: { background: `linear-gradient(90deg, ${C.accent}, ${C.teal})`, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" } }, "Load")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 8.5, letterSpacing: "0.22em", textTransform: "uppercase", color: C.faint, marginTop: 3 } }, T.sub))), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2" }, !EMBEDDED && /* @__PURE__ */ React.createElement("a", { href: homeHref, title: T.backToSite, className: "flex items-center gap-1 px-2.5 py-1 rounded-md transition hover:brightness-125", style: { fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.1em", color: C.dim, border: "1px solid #1c2735" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, lineHeight: 1 } }, "\u2190"), T.backToSite), /* @__PURE__ */ React.createElement("button", { onClick: doShare, title: T.shareTitle, className: "flex items-center gap-1 px-2.5 py-1 rounded-md transition hover:brightness-125", style: { fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.1em", color: "#bcd9ff", background: hexA(C.accent, 0.12), border: `1px solid ${hexA(C.accent, 0.32)}` } }, /* @__PURE__ */ React.createElement("svg", { width: "11", height: "11", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.4", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "5", r: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "6", cy: "12", r: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "19", r: "3" }), /* @__PURE__ */ React.createElement("path", { d: "M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" })), T.shareBtn), /* @__PURE__ */ React.createElement("button", { onClick: buildLadevorschlag, title: T.pdfTitle, className: "flex items-center gap-1 px-2.5 py-1 rounded-md transition hover:brightness-125", style: { fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.1em", color: C.dim, border: "1px solid #1c2735" } }, /* @__PURE__ */ React.createElement("svg", { width: "11", height: "11", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }), /* @__PURE__ */ React.createElement("path", { d: "M14 2v6h6" }), /* @__PURE__ */ React.createElement("path", { d: "M8 13h8M8 17h6" })), T.pdfBtn), /* @__PURE__ */ React.createElement("span", { className: "hidden sm:inline px-2.5 py-1 rounded-md", style: { fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint, border: "1px solid #1c2735" } }, "ISO 668"))), /* @__PURE__ */ React.createElement("div", { className: "flex flex-col lg:flex-row flex-1 min-h-0" }, /* @__PURE__ */ React.createElement("aside", { className: "w-full lg:w-[384px] lg:flex-shrink-0 overflow-y-auto", style: { borderRight: "1px solid #141c27", maxHeight: "100vh" } }, /* @__PURE__ */ React.createElement(ContainerPicker, { preset, applyPreset, container, setCont, T }), /* @__PURE__ */ React.createElement("div", { className: "p-5" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 mb-3" }, /* @__PURE__ */ React.createElement(SectionTitle, { noMargin: true }, T.cargo), /* @__PURE__ */ React.createElement("span", { className: "h-px flex-1", style: { background: "linear-gradient(90deg,#1d2734,transparent)" } }), /* @__PURE__ */ React.createElement("button", { onClick: () => {
       setImportText("");
       setImportRows(null);
       setImportOpen(true);
