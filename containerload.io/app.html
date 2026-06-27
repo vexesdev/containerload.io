@@ -59,15 +59,44 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
     "20' HC": { l: 590, w: 235, h: 270, payload: 28150, door: { w: 234, h: 258 } },
     "40' GP": { l: 1203, w: 235, h: 239, payload: 26600, door: { w: 234, h: 228 } },
     "40' HC": { l: 1203, w: 235, h: 270, payload: 26580, door: { w: 234, h: 258 } },
-    "45' HC": { l: 1355, w: 235, h: 270, payload: 27600, door: { w: 234, h: 258 } }
+    "45' HC": { l: 1355, w: 235, h: 270, payload: 27600, door: { w: 234, h: 258 } },
+    // ── Special Equipment ─────────────────────────────────────────────────
+    // ACHTUNG: Alle Equipment-Masse (l/w/h/payload) sind editierbare DEFAULTS und
+    // lieferantenabhaengig – NICHT als verbindlich verstehen. l/w/h = nutzbares
+    // Deck-/Innenmass (cm). gauge = ISO-Slot-Huellmass (cm), gegen das Ueberstand
+    // gemessen wird (Buchungsmass der Zelle: 8'=244, 8'6"=259, 20'=606, 40'=1219).
+    // Open Top (Innenmass ~ wie GP, Dach offen)
+    "20' Open Top": { l: 589, w: 235, h: 239, payload: 28100, door: { w: 234, h: 230 }, kind: "opentop", gauge: { l: 606, w: 244, h: 259 } },
+    "40' Open Top": { l: 1203, w: 235, h: 239, payload: 26280, door: { w: 234, h: 230 }, kind: "opentop", gauge: { l: 1219, w: 244, h: 259 } },
+    // Flat Rack (Stirnwaende vorhanden, Seiten+Dach offen; h = Stirnwand-Hoehe, variiert je Typ ~199–226)
+    "20' Flat Rack": { l: 585, w: 244, h: 218, payload: 31000, kind: "flatrack", gauge: { l: 606, w: 244, h: 259 } },
+    "40' Flat Rack": { l: 1198, w: 240, h: 205, payload: 39000, kind: "flatrack", gauge: { l: 1219, w: 244, h: 259 } },
+    // Platform (nur Deck, alles offen; h = nur visuelle Deckhoehe, KEIN Ladungslimit)
+    "20' Platform": { l: 606, w: 244, h: 30, payload: 31000, kind: "platform", gauge: { l: 606, w: 244, h: 259 } },
+    "40' Platform": { l: 1219, w: 244, h: 40, payload: 40000, kind: "platform", gauge: { l: 1219, w: 244, h: 259 } }
   };
   var META = {
     "20' GP": "General Purpose",
     "20' HC": "High Cube",
     "40' GP": "General Purpose",
     "40' HC": "High Cube",
-    "45' HC": "High Cube \xB7 Pallet-Wide"
+    "45' HC": "High Cube \xB7 Pallet-Wide",
+    "20' Open Top": "Open Top \xB7 Dach offen",
+    "40' Open Top": "Open Top \xB7 Dach offen",
+    "20' Flat Rack": "Flat Rack \xB7 Stirnw\xE4nde",
+    "40' Flat Rack": "Flat Rack \xB7 Stirnw\xE4nde",
+    "20' Platform": "Platform \xB7 nur Deck",
+    "40' Platform": "Platform \xB7 nur Deck"
   };
+  // kind -> welche Huellflaechen sind geschlossen (true = Panel wird gezeichnet).
+  // EINE Wahrheit: aus kind werden sowohl gezeichnete Flaechen als auch OOG-Achsen abgeleitet.
+  var EQUIP = {
+    dry: { panels: { sides: true, ends: true, roof: true } },
+    opentop: { panels: { sides: true, ends: true, roof: false } },
+    flatrack: { panels: { sides: false, ends: true, roof: false } },
+    platform: { panels: { sides: false, ends: false, roof: false } }
+  };
+  var panelsFor = (k) => (EQUIP[k] || EQUIP.dry).panels;
   var TYPE_COLORS = ["#2f9bff", "#38e0c8", "#ffb454", "#c084fc", "#ff7a90", "#4dd0e1", "#a3e635", "#f472b6"];
   var C = {
     text: "#eef2f7",
@@ -372,6 +401,82 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
     }
     return { placed, perType: types.map((t, i) => ({ loaded: loaded[i], total: num(t.qty) })), contVol, usedVol, util: contVol > 0 ? usedVol / contVol * 100 : 0, weight, boxes: placed.length, totalBoxes, layers, single, rotHint, rotHintAll };
   }
+  // ── Special Equipment: Ueberstand-Platzierung, OOG-Vermessung, deck-faehiger Packer ──
+  // Reine Geometrie. Das Tool entscheidet KEINE Physik (Gewichtsverteilung/Sicherung) –
+  // es optimiert nur innerhalb der Nutzervorgabe (forceCentered = "mittig stauen erzwingen").
+  // Platzierung eines Uebermass-Stuecks auf dem Deck (cm, Min-Ecke). j/m = Index/Anzahl Stuecke.
+  function placeOversize(dims, Ct, panels, forceCentered, j, m) {
+    const CL = num(Ct.l), CW = num(Ct.w);
+    const dx = num(dims.l), dy = num(dims.h), dz = num(dims.w);
+    const xc = CL * (j + 0.5) / Math.max(1, m);
+    let x = xc - dx / 2;
+    let z;
+    if (!panels.sides && dz > CW && !forceCentered) z = CW - dz;
+    else z = (CW - dz) / 2;
+    return { x, y: 0, z, dx, dy, dz };
+  }
+  // OOG-Vermessung (cm) gegen das gauge-Huellmass, nur in OFFENEN Richtungen. md = groesste
+  // Stueckmasse je Achse (der groesste Ueberstand je Achse bestimmt den Buchungswert).
+  function computeOOG(md, gauge, panels, forceCentered) {
+    const oog = {};
+    if (!panels.roof) oog.overHeight = Math.max(0, num(md.h) - num(gauge.h));
+    if (!panels.sides) {
+      const total = Math.max(0, num(md.w) - num(gauge.w));
+      if (forceCentered) { oog.overWidthL = total / 2; oog.overWidthR = total / 2; }
+      else { oog.overWidthL = total; oog.overWidthR = 0; }
+    }
+    if (!panels.ends) {
+      const total = Math.max(0, num(md.l) - num(gauge.l));
+      oog.overLengthFront = total / 2; oog.overLengthBack = total / 2;
+    }
+    return oog;
+  }
+  // Blockierte Slots = reine Geometrie-Schaetzung (kein Geld). Das eigene Stueck + je
+  // ueberragter Richtung ein Nachbar-Slot.
+  function blockedSlots(oog) {
+    let s = 1;
+    if (oog.overWidthL > 0) s++;
+    if (oog.overWidthR > 0) s++;
+    if (oog.overLengthFront > 0) s++;
+    if (oog.overLengthBack > 0) s++;
+    if (oog.overHeight > 0) s++;
+    return s;
+  }
+  // Packer fuer Special Equipment: normale Stuecke wie bisher innerhalb l/w/h; ein Uebermass-Stueck
+  // wird NICHT abgelehnt, sondern aufs Deck gelegt (Ueberstand nur in offenen Richtungen). dry -> packCargo.
+  function packKind(Ct, cargo, opts, forceCentered) {
+    const kind = Ct.kind || "dry";
+    if (kind === "dry") return packCargo(Ct, cargo, opts);
+    const panels = panelsFor(kind);
+    const CL = num(Ct.l), CW = num(Ct.w), CH = num(Ct.h);
+    const overTi = new Set(), overUnits = [];
+    cargo.forEach((t, ti) => {
+      const l = num(t.l), w = num(t.w), h = num(t.h), q = Math.max(0, Math.floor(num(t.qty)));
+      if (q <= 0 || l <= 0 || w <= 0 || h <= 0) return;
+      const fitsDeck = (l <= CL && w <= CW || w <= CL && l <= CW) && h <= CH;
+      if (fitsDeck) return;
+      const overL = l > CL && (w > CW || l > CW), overW = Math.min(l, w) > CW, overH = h > CH;
+      const placeable = (!overL || !panels.ends) && (!overW || !panels.sides) && (!overH || !panels.roof);
+      if (placeable) { overTi.add(ti); for (let n = 0; n < q; n++) overUnits.push({ ti, l, w, h }); }
+    });
+    const masked = cargo.map((t, ti) => overTi.has(ti) ? { ...t, qty: 0 } : t);
+    const base = packCargo(Ct, masked, { ...opts, noHint: true });
+    const placed = base.placed.slice();
+    // perType muss an cargo ausgerichtet bleiben; over-Typen wurden in masked auf 0 gesetzt.
+    const perType2 = cargo.map((t, ti) => ({ loaded: base.perType[ti] ? base.perType[ti].loaded : 0, total: Math.max(0, Math.floor(num(t.qty))) }));
+    let weight = base.weight;
+    overUnits.forEach((u, j) => {
+      const box = placeOversize(u, Ct, panels, forceCentered, j, overUnits.length);
+      placed.push({ ti: u.ti, x: box.x, y: box.y, z: box.z, dx: box.dx, dy: box.dy, dz: box.dz });
+      perType2[u.ti].loaded++;
+      weight += num(cargo[u.ti].weight);
+    });
+    const contVol = CL * CW * CH / 1e6;
+    let usedVol = 0;
+    placed.forEach((p) => usedVol += p.dx * p.dy * p.dz / 1e6);
+    const totalBoxes = cargo.reduce((s, t) => s + Math.max(0, Math.floor(num(t.qty))), 0);
+    return { placed, perType: perType2, contVol, usedVol, util: contVol > 0 ? usedVol / contVol * 100 : 0, weight, boxes: placed.length, totalBoxes, layers: base.layers || 1, single: false, rotHint: false, rotHintAll: false };
+  }
   function suggestContainer(cargo) {
     const totalBoxes = cargo.reduce((s, t) => s + Math.max(0, num(t.qty)), 0);
     if (totalBoxes === 0) return null;
@@ -536,7 +641,16 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       recTooBig: (i) => /* @__PURE__ */ React.createElement(React.Fragment, null, "\u201E", i, '" ist gr\xF6\xDFer als jeder Standard-Container.'),
       recNoFit: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, n), " Packst\xFCcke passen nicht rein."),
       autoCont: "Auto",
-      openMore: (n) => `${n} offen \xB7 weitere Container n\xF6tig`
+      openMore: (n) => `${n} offen \xB7 weitere Container n\xF6tig`,
+      forceCenter: "mittig stauen erzwingen",
+      oogTitle: "Out of Gauge (Sch\xE4tzung)",
+      oogH: "\xDCber H\xF6he",
+      oogWL: "\xDCber Breite L",
+      oogWR: "\xDCber Breite R",
+      oogLF: "\xDCber L\xE4nge v.",
+      oogLB: "\xDCber L\xE4nge h.",
+      oogSlots: (n) => `Blockierte Slots: ${n}`,
+      oogDisc: "Sch\xE4tzung zur Buchungsvorbereitung – keine verbindliche Stauplanung."
     },
     en: {
       sub: "Loading in seconds",
@@ -598,7 +712,16 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       recTooBig: (i) => /* @__PURE__ */ React.createElement(React.Fragment, null, '"', i, '" is larger than any standard container.'),
       recNoFit: (n) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", { style: { color: "#ffd9a0" } }, n), " items don't fit."),
       autoCont: "Auto",
-      openMore: (n) => `${n} open \xB7 more containers needed`
+      openMore: (n) => `${n} open \xB7 more containers needed`,
+      forceCenter: "force centered stow",
+      oogTitle: "Out of Gauge (estimate)",
+      oogH: "Over height",
+      oogWL: "Over width L",
+      oogWR: "Over width R",
+      oogLF: "Over length f.",
+      oogLB: "Over length b.",
+      oogSlots: (n) => `Blocked slots: ${n}`,
+      oogDisc: "Estimate for booking prep – not a binding stowage plan."
     }
   };
   var T = I18N[LANG];
@@ -620,14 +743,17 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       const cargo = st.it.map((r) => ({ id: uid(), name: (r.n || "Position").slice(0, 40), l: Math.max(1, +r.l || 1), w: Math.max(1, +r.w || 1), h: Math.max(1, +r.h || 1), weight: Math.max(0, +r.wt || 0), qty: Math.max(1, +r.q || 1), stackable: r.s !== 0, rotatable: r.r !== 0 }));
       const preset = typeof st.pr === "string" && PRESETS[st.pr] ? st.pr : "Custom";
       const _base = PRESETS[preset] || PRESETS["20' GP"];
-      const container = st.co && +st.co.l ? { l: +st.co.l, w: +st.co.w, h: +st.co.h, payload: +st.co.p || 28e3, door: _base.door } : { ..._base };
-      return { preset, container, cargo };
+      // kind aus eq (kompaktes Feld); panels werden daraus abgeleitet, nie serialisiert. Fehlt eq -> dry.
+      const kind = EQUIP[st.eq] ? st.eq : _base.kind || "dry";
+      const forceCentered = st.fc === 1;
+      const container = st.co && +st.co.l ? { l: +st.co.l, w: +st.co.w, h: +st.co.h, payload: +st.co.p || 28e3, door: _base.door, kind, gauge: _base.gauge } : { ..._base, kind };
+      return { preset, container, cargo, forceCentered };
     } catch (e) {
       return null;
     }
   })();
-  var encodePlanURL = (preset, container, cargo) => {
-    const st = { pr: preset, co: { l: container.l, w: container.w, h: container.h, p: container.payload }, it: cargo.map((c) => ({ n: c.name, l: c.l, w: c.w, h: c.h, wt: c.weight, q: c.qty, s: c.stackable ? 1 : 0, r: c.rotatable ? 1 : 0 })) };
+  var encodePlanURL = (preset, container, cargo, forceCentered) => {
+    const st = { pr: preset, eq: container.kind || "dry", fc: forceCentered ? 1 : 0, co: { l: container.l, w: container.w, h: container.h, p: container.payload }, it: cargo.map((c) => ({ n: c.name, l: c.l, w: c.w, h: c.h, wt: c.weight, q: c.qty, s: c.stackable ? 1 : 0, r: c.rotatable ? 1 : 0 })) };
     const b = window.btoa(unescape(encodeURIComponent(JSON.stringify(st)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
     return window.location.origin + window.location.pathname.replace(/[^/]*$/, "share.html") + "?p=" + b;
   };
@@ -1028,6 +1154,12 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       const boxGeo = new THREE.BoxGeometry(1, 1, 1);
       const typeMats = {};
       const typeMat = (ti) => typeMats[ti] || (typeMats[ti] = new THREE.MeshStandardMaterial({ color: new THREE.Color(TYPE_COLORS[ti % TYPE_COLORS.length]), roughness: 0.62, metalness: 0.08 }));
+      // Special-Equipment-Ressourcen (dimensionsunabhaengig, einmal pro Build).
+      const dT = 0.14, cs = 0.16;
+      const matDeck = new THREE.MeshStandardMaterial({ color: 0x222a36, roughness: 0.85, metalness: 0.25 });
+      const castMat = new THREE.MeshStandardMaterial({ color: 0x2a3340, roughness: 0.6, metalness: 0.55 });
+      const geoCast = new THREE.BoxGeometry(cs, cs, cs);
+      const oogMat = new THREE.MeshStandardMaterial({ color: 0xffb454, transparent: true, opacity: 0.42, depthWrite: false });
       // Container-Kette der 3D-Ansicht (Slot 0 = gewählter Container, Folge-Container ggf. anderer Typ).
       const dimsOf = (c) => ({ CL: num(c.preset.l) / 100, CH: num(c.preset.h) / 100, CW: num(c.preset.w) / 100 });
       const chain = (result && result.chain && result.chain.length ? result.chain : [{ name: null, preset: container, placed: result?.placed || [] }]).slice(0, 4);
@@ -1045,62 +1177,106 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
         const gridProto = new THREE.GridHelper(Math.ceil(Math.max(CL, CW)) + 2, Math.ceil(Math.max(CL, CW)) + 2, 2899024, 1449771);
         gridProto.material.transparent = true;
         gridProto.material.opacity = 0.5;
-        const S = { CL, CH, CW, matSide: wallMat(texSide, 0.15), matEndA: wallMat(texEnd, 0.16), matEndB: wallMat(texEnd, 0.1), matRoof: new THREE.MeshStandardMaterial({ color: STEEL, transparent: true, opacity: 0.05, depthWrite: false, side: THREE.DoubleSide }), matFloor: new THREE.MeshStandardMaterial({ color: 2107962, roughness: 0.9, metalness: 0.12 }), fmat: new THREE.MeshStandardMaterial({ color: FRAME, roughness: 0.5, metalness: 0.5 }), matTop: new THREE.LineBasicMaterial({ color: 7312324, transparent: true, opacity: 0.55 }), geoWallSide: new THREE.PlaneGeometry(CL, CH), geoWallEnd: new THREE.PlaneGeometry(CW, CH), geoRoof: new THREE.PlaneGeometry(CL, CW), geoCol: new THREE.BoxGeometry(P, CH, P), geoBeamL: new THREE.BoxGeometry(CL + P, P, P), geoBeamW: new THREE.BoxGeometry(P, P, CW + P), geoSeam: new THREE.BoxGeometry(0.03, CH * 0.94, 0.03), geoTop, gridGeo: gridProto.geometry, gridMat: gridProto.material };
+        const S = { CL, CH, CW, matSide: wallMat(texSide, 0.15), matEndA: wallMat(texEnd, 0.16), matEndB: wallMat(texEnd, 0.1), matRoof: new THREE.MeshStandardMaterial({ color: STEEL, transparent: true, opacity: 0.05, depthWrite: false, side: THREE.DoubleSide }), matFloor: new THREE.MeshStandardMaterial({ color: 2107962, roughness: 0.9, metalness: 0.12 }), fmat: new THREE.MeshStandardMaterial({ color: FRAME, roughness: 0.5, metalness: 0.5 }), matTop: new THREE.LineBasicMaterial({ color: 7312324, transparent: true, opacity: 0.55 }), geoWallSide: new THREE.PlaneGeometry(CL, CH), geoWallEnd: new THREE.PlaneGeometry(CW, CH), geoRoof: new THREE.PlaneGeometry(CL, CW), geoCol: new THREE.BoxGeometry(P, CH, P), geoBeamL: new THREE.BoxGeometry(CL + P, P, P), geoBeamW: new THREE.BoxGeometry(P, P, CW + P), geoSeam: new THREE.BoxGeometry(0.03, CH * 0.94, 0.03), geoTop, gridGeo: gridProto.geometry, gridMat: gridProto.material, matEndSolid: wallMat(texEnd, 0.5), geoDeck: new THREE.BoxGeometry(CL, dT, CW), geoBow: new THREE.BoxGeometry(0.04, 0.04, CW) };
         shellCache[k] = S;
         return S;
       };
-      const addShell = (parent, S) => {
+      const addShell = (parent, S, kind) => {
         const CL = S.CL, CH = S.CH, CW = S.CW, cx = CL / 2, cy = CH / 2, cz = CW / 2;
-        const w1 = new THREE.Mesh(S.geoWallSide, S.matSide);
-        w1.position.set(cx, cy, 0);
-        parent.add(w1);
-        const w2 = new THREE.Mesh(S.geoWallSide, S.matSide);
-        w2.position.set(cx, cy, CW);
-        parent.add(w2);
-        const w3 = new THREE.Mesh(S.geoWallEnd, S.matEndA);
-        w3.position.set(0, cy, cz);
-        w3.rotation.y = Math.PI / 2;
-        parent.add(w3);
-        const w4 = new THREE.Mesh(S.geoWallEnd, S.matEndB);
-        w4.position.set(CL, cy, cz);
-        w4.rotation.y = Math.PI / 2;
-        parent.add(w4);
-        const roof = new THREE.Mesh(S.geoRoof, S.matRoof);
-        roof.rotation.x = -Math.PI / 2;
-        roof.position.set(cx, CH, cz);
-        parent.add(roof);
-        const floor = new THREE.Mesh(S.geoRoof, S.matFloor);
-        floor.rotation.x = -Math.PI / 2;
-        floor.position.set(cx, 5e-3, cz);
-        floor.receiveShadow = true;
-        parent.add(floor);
-        [[0, 0], [CL, 0], [0, CW], [CL, CW]].forEach((c2) => {
-          const b = new THREE.Mesh(S.geoCol, S.fmat);
-          b.position.set(c2[0], cy, c2[1]);
-          b.castShadow = true;
-          parent.add(b);
-        });
-        [0, CH].forEach((y) => {
-          const a1 = new THREE.Mesh(S.geoBeamL, S.fmat);
-          a1.position.set(cx, y, 0);
-          parent.add(a1);
-          const a2 = new THREE.Mesh(S.geoBeamL, S.fmat);
-          a2.position.set(cx, y, CW);
-          parent.add(a2);
-          const b1 = new THREE.Mesh(S.geoBeamW, S.fmat);
-          b1.position.set(0, y, cz);
-          parent.add(b1);
-          const b2 = new THREE.Mesh(S.geoBeamW, S.fmat);
-          b2.position.set(CL, y, cz);
-          parent.add(b2);
-        });
-        const seam = new THREE.Mesh(S.geoSeam, S.fmat);
-        seam.position.set(CL + 2e-3, cy, cz);
-        parent.add(seam);
-        const te = new THREE.LineSegments(S.geoTop, S.matTop);
-        te.rotation.x = -Math.PI / 2;
-        te.position.set(cx, CH + 1e-3, cz);
-        parent.add(te);
+        const pan = panelsFor(kind);
+        const hasDeck = kind === "flatrack" || kind === "platform";
+        // ── Laengswaende ──
+        if (pan.sides) {
+          const w1 = new THREE.Mesh(S.geoWallSide, S.matSide);
+          w1.position.set(cx, cy, 0);
+          parent.add(w1);
+          const w2 = new THREE.Mesh(S.geoWallSide, S.matSide);
+          w2.position.set(cx, cy, CW);
+          parent.add(w2);
+        }
+        // ── Stirnwaende (Flat-Rack-Kopfwaende massiv) ──
+        if (pan.ends) {
+          const solid = kind === "flatrack";
+          const w3 = new THREE.Mesh(S.geoWallEnd, solid ? S.matEndSolid : S.matEndA);
+          w3.position.set(0, cy, cz);
+          w3.rotation.y = Math.PI / 2;
+          parent.add(w3);
+          const w4 = new THREE.Mesh(S.geoWallEnd, solid ? S.matEndSolid : S.matEndB);
+          w4.position.set(CL, cy, cz);
+          w4.rotation.y = Math.PI / 2;
+          parent.add(w4);
+        }
+        // ── Dach ──
+        if (pan.roof) {
+          const roof = new THREE.Mesh(S.geoRoof, S.matRoof);
+          roof.rotation.x = -Math.PI / 2;
+          roof.position.set(cx, CH, cz);
+          parent.add(roof);
+        }
+        // ── Boden (dry/opentop) bzw. dickes Deck (flatrack/platform) ──
+        if (!hasDeck) {
+          const floor = new THREE.Mesh(S.geoRoof, S.matFloor);
+          floor.rotation.x = -Math.PI / 2;
+          floor.position.set(cx, 5e-3, cz);
+          floor.receiveShadow = true;
+          parent.add(floor);
+        } else {
+          const deck = new THREE.Mesh(S.geoDeck, matDeck);
+          deck.position.set(cx, 5e-3 - dT / 2, cz);
+          deck.receiveShadow = true;
+          parent.add(deck);
+        }
+        // ── Eckpfosten (Platform hat kein volles Skelett) ──
+        if (kind !== "platform") {
+          [[0, 0], [CL, 0], [0, CW], [CL, CW]].forEach((c2) => {
+            const b = new THREE.Mesh(S.geoCol, S.fmat);
+            b.position.set(c2[0], cy, c2[1]);
+            b.castShadow = true;
+            parent.add(b);
+          });
+        }
+        // ── Holme: unten immer; oben dry/opentop rundum, flatrack nur quer, platform keine ──
+        const rail = (geo, x, y, z) => { const m = new THREE.Mesh(geo, S.fmat); m.position.set(x, y, z); parent.add(m); };
+        rail(S.geoBeamL, cx, 0, 0); rail(S.geoBeamL, cx, 0, CW);
+        rail(S.geoBeamW, 0, 0, cz); rail(S.geoBeamW, CL, 0, cz);
+        if (kind === "dry" || kind === "opentop") {
+          rail(S.geoBeamL, cx, CH, 0); rail(S.geoBeamL, cx, CH, CW);
+          rail(S.geoBeamW, 0, CH, cz); rail(S.geoBeamW, CL, CH, cz);
+        } else if (kind === "flatrack") {
+          rail(S.geoBeamW, 0, CH, cz); rail(S.geoBeamW, CL, CH, cz);
+        }
+        // ── Tuernaht + Dachkante nur bei geschlossenen Boxen ──
+        if (kind === "dry" || kind === "opentop") {
+          const seam = new THREE.Mesh(S.geoSeam, S.fmat);
+          seam.position.set(CL + 2e-3, cy, cz);
+          parent.add(seam);
+          const te = new THREE.LineSegments(S.geoTop, S.matTop);
+          te.rotation.x = -Math.PI / 2;
+          te.position.set(cx, CH + 1e-3, cz);
+          parent.add(te);
+        }
+        // ── Eckbeschlaege (Special Equipment; Platform nur unten). Bei "dry" bewusst NICHT,
+        //    damit die bestehende Dry-Ansicht unveraendert bleibt (Abnahme-Kriterium). ──
+        if (kind !== "dry") {
+          const castYs = kind === "platform" ? [0] : [0, CH];
+          [[0, 0], [CL, 0], [0, CW], [CL, CW]].forEach(([x, z]) => {
+            castYs.forEach((y) => {
+              const b = new THREE.Mesh(geoCast, castMat);
+              b.position.set(x, y, z);
+              parent.add(b);
+            });
+          });
+        }
+        // ── Open-Top-Dachspriegel (die Signatur) ──
+        if (kind === "opentop") {
+          const nBows = Math.max(3, Math.round(CL / 1.3));
+          for (let i = 1; i <= nBows; i++) {
+            const x = CL * i / (nBows + 1);
+            const bow = new THREE.Mesh(S.geoBow, S.fmat);
+            bow.position.set(x, CH, cz);
+            parent.add(bow);
+          }
+        }
         const g = new THREE.LineSegments(S.gridGeo, S.gridMat);
         g.position.set(cx, 2e-3, cz);
         parent.add(g);
@@ -1120,9 +1296,28 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       const prevC = reveal.current.prevContainers || 0;
       chain.forEach((c, ci) => {
         const d = dimsArr[ci], S = getShell(d.CL, d.CH, d.CW);
+        const ckind = c.preset && c.preset.kind || "dry";
         const cg = new THREE.Group();
         cg.position.x = xpos[ci];
-        addShell(cg, S);
+        addShell(cg, S, ckind);
+        // ── Out-of-Gauge: Uebermass amber hervorheben (nur Hauptcontainer) ──
+        if (ci === 0 && result && result.oog && result.oogBox && result.gauge) {
+          const b = result.oogBox, ga = result.gauge;
+          const gL = num(ga.l) / 100, gW = num(ga.w) / 100, gH = num(ga.h) / 100;
+          const bx = b.x / 100, bz = b.z / 100, sx = b.dx / 100, sy = b.dy / 100, sz = b.dz / 100;
+          const slab = (mnx, mxx, mny, mxy, mnz, mxz) => {
+            const w = mxx - mnx, ht = mxy - mny, dp = mxz - mnz;
+            if (w <= 1e-3 || ht <= 1e-3 || dp <= 1e-3) return;
+            const m = new THREE.Mesh(new THREE.BoxGeometry(w, ht, dp), oogMat);
+            m.position.set(mnx + w / 2, mny + ht / 2, mnz + dp / 2);
+            cg.add(m);
+          };
+          if (sy > gH) slab(bx, bx + sx, gH, sy, bz, bz + sz);                       // ueber Hoehe (Deckel)
+          if (bz + sz > gW) slab(bx, bx + sx, 0, Math.min(sy, gH), gW, bz + sz);     // ueber Breite +z
+          if (bz < 0) slab(bx, bx + sx, 0, Math.min(sy, gH), bz, 0);                 // ueber Breite -z
+          if (bx + sx > gL) slab(gL, bx + sx, 0, Math.min(sy, gH), Math.max(bz, 0), Math.min(bz + sz, gW)); // ueber Laenge vorn
+          if (bx < 0) slab(bx, 0, 0, Math.min(sy, gH), Math.max(bz, 0), Math.min(bz + sz, gW));             // ueber Laenge hinten
+        }
         const byType = {};
         (c.placed || []).forEach((p) => (byType[p.ti] = byType[p.ti] || []).push(p));
         const boxMeshes = [];
@@ -1252,16 +1447,33 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
     const [shareOpen, setShareOpen] = useState(false);
     const [shareURL, setShareURL] = useState("");
     const [shareCopied, setShareCopied] = useState(false);
-    const [result, setResult] = useState(() => packCargo(INIT_CONTAINER, INIT_CARGO));
+    const [forceCentered, setForceCentered] = useState(SHARED ? !!SHARED.forceCentered : false);
+    const [result, setResult] = useState(() => packKind(INIT_CONTAINER, INIT_CARGO, {}, SHARED ? !!SHARED.forceCentered : false));
     const [chainOverride, setChainOverride] = useState({});
     const [toast, setToast] = useState("");
     useEffect(() => {
       const t = setTimeout(() => {
-        const r = packCargo(container, cargo);
+        const kind = container.kind || "dry";
+        const r = packKind(container, cargo, {}, forceCentered);
         if (r.boxes < r.totalBoxes && r.totalBoxes > 0 && !r.rotHintAll) r.suggestion = suggestContainer(cargo);
+        // Special Equipment: Out-of-Gauge-Vermessung (cm) gegen das gauge-Huellmass des
+        // Hauptcontainers. Schaetzung zur Buchungsvorbereitung – keine verbindliche Stauplanung.
+        if (kind !== "dry") {
+          const panels = panelsFor(kind);
+          const gauge = container.gauge || { l: num(container.l), w: num(container.w), h: num(container.h) };
+          const md = { l: 0, w: 0, h: 0 };
+          cargo.forEach((c) => { if (num(c.qty) > 0) { md.l = Math.max(md.l, num(c.l)); md.w = Math.max(md.w, num(c.w)); md.h = Math.max(md.h, num(c.h)); } });
+          const oog = computeOOG(md, gauge, panels, forceCentered);
+          const any = (oog.overHeight || 0) + (oog.overWidthL || 0) + (oog.overWidthR || 0) + (oog.overLengthFront || 0) + (oog.overLengthBack || 0) > 0;
+          if (any) {
+            r.oog = oog;
+            r.oogBlocked = blockedSlots(oog);
+            r.oogBox = placeOversize({ l: md.l, w: md.w, h: md.h }, container, panels, forceCentered, 0, 1);
+            r.gauge = gauge;
+          }
+        }
         // 3D-Ansicht: Container-Kette aufbauen (Slot 0 = gewählter Container; Folge-Container
-        // automatisch kleinster passender Typ oder manuell übersteuert). Gedeckelt auf 4 Hüllen;
-        // was darüber hinaus nicht passt, wird als ehrlicher Überhang gemeldet.
+        // automatisch kleinster passender Typ oder manuell übersteuert). Gedeckelt auf 4 Hüllen.
         const MAXVIS = 4;
         if (r.boxes < r.totalBoxes && r.totalBoxes > 0) {
           const ch = chainContainers(container, preset, cargo, r, chainOverride, MAXVIS);
@@ -1274,7 +1486,7 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
         setResult(r);
       }, 200);
       return () => clearTimeout(t);
-    }, [container, cargo, preset, chainOverride]);
+    }, [container, cargo, preset, chainOverride, forceCentered]);
     useEffect(() => {
       if (!toast) return;
       const t = setTimeout(() => setToast(""), 2600);
@@ -1323,7 +1535,7 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
       setToast(T.impApplied(items.length));
     };
     const doShare = () => {
-      const url = encodePlanURL(preset, container, cargo);
+      const url = encodePlanURL(preset, container, cargo, forceCentered);
       setShareURL(url);
       setShareCopied(false);
       setShareOpen(true);
@@ -1340,7 +1552,9 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
     const payColor = payPct > 100 ? C.bad : payPct > 90 ? C.warn : C.good;
     const sug = result.suggestion;
     const doorOpening = container.door && preset !== "Custom" ? container.door : { w: num(container.w), h: num(container.h) };
-    const doorFails = cargo.filter((it) => !fitsThroughDoor(it, doorOpening));
+    // Special Equipment wird von oben/seitlich beladen – die Tuerpruefung ist hier nicht aussagekraeftig.
+    const doorFails = container.kind && container.kind !== "dry" ? [] : cargo.filter((it) => !fitsThroughDoor(it, doorOpening));
+    const oogRows = result.oog ? [["overHeight", T.oogH], ["overWidthL", T.oogWL], ["overWidthR", T.oogWR], ["overLengthFront", T.oogLF], ["overLengthBack", T.oogLB]].filter(([k]) => (result.oog[k] || 0) > 0).map(([k, lbl]) => ({ lbl, v: Math.round(result.oog[k]) })) : [];
     const buildLadevorschlag = () => {
       try {
         const items = cargo.filter((c) => num(c.qty, 0) > 0);
@@ -1377,7 +1591,7 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
         const p2 = (n) => String(n).padStart(2, "0");
         const datum = `${p2(now.getDate())}.${p2(now.getMonth() + 1)}.${now.getFullYear()}`;
         const ref = `CL-${String(now.getFullYear()).slice(2)}${p2(now.getMonth() + 1)}${p2(now.getDate())}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-        const qr = makeQR(encodePlanURL(preset, container, cargo));
+        const qr = makeQR(encodePlanURL(preset, container, cargo, forceCentered));
         const pageHTML = LV_PAGE({
           REF: ref,
           DATUM: datum,
@@ -1459,7 +1673,7 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
         const on = c.rotatable !== false;
         return /* @__PURE__ */ React.createElement("button", { onClick: () => upd(c.id, "rotatable", !on), className: "rounded-lg transition flex items-center gap-1", style: { height: 31, padding: "0 12px", fontSize: 10.5, fontWeight: on ? 600 : 500, background: on ? hexA(C.accent, 0.15) : "#101824", border: `1px solid ${on ? hexA(C.accent, 0.6) : "#222d3c"}`, color: on ? C.accent : C.dim } }, "\u21BB 90\xB0");
       })())));
-    })))), /* @__PURE__ */ React.createElement("main", { className: "flex-1 min-h-0 flex flex-col" }, /* @__PURE__ */ React.createElement("div", { className: "relative flex-1 min-h-[380px]" }, /* @__PURE__ */ React.createElement(Viewport, { container, result, preset, overrides: chainOverride, onSlotType }), doorFails.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "absolute top-4 left-1/2 clrise", style: { transform: "translateX(-50%)", zIndex: 6 } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 rounded-xl px-3.5 py-2", style: { background: hexA("#1a0f08", 0.9), border: `1px solid ${hexA(C.warn, 0.55)}`, backdropFilter: "blur(10px)", boxShadow: "0 10px 30px -10px rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14 } }, "\u{1F6AA}"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11.5, lineHeight: 1.3, color: "#ffd9a8", maxWidth: 250 } }, T.doorWarn(doorFails.length), " \xB7 ", T.doorHint(doorOpening.w, doorOpening.h)))), /* @__PURE__ */ React.createElement("div", { className: "absolute top-4 left-4 clrise", style: { pointerEvents: "none" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3 rounded-2xl p-3 pr-4", style: { background: hexA("#0a0f18", 0.72), border: "1px solid #1e2a3a", backdropFilter: "blur(10px)", boxShadow: "0 10px 40px -12px rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement(Gauge, { value: result.util, color: utilColor }), /* @__PURE__ */ React.createElement("div", { className: "leading-tight" }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.12em", textTransform: "uppercase", color: C.dim } }, T.loaded), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 22, fontWeight: 700, color: allFit ? C.good : C.text } }, result.boxes, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: C.faint } }, " / ", result.totalBoxes)), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1.5 mt-1", style: { fontSize: 11.5, fontWeight: 600, color: allFit ? C.good : C.warn } }, /* @__PURE__ */ React.createElement("span", null, allFit ? "\u2713" : "\u26A0"), /* @__PURE__ */ React.createElement("span", null, allFit ? T.allLoaded : T.open(unplaced)))))), unplaced > 0 && /* @__PURE__ */ React.createElement("div", { className: "absolute bottom-4 left-4 right-4 flex justify-center clrise", style: { pointerEvents: "none" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3 rounded-2xl px-4 py-2.5 max-w-[560px]", style: { pointerEvents: "auto", background: hexA("#0a0f18", 0.82), border: `1px solid ${hexA(result.rotHintAll || sug && sug.type === "single" ? C.accent : C.warn, 0.5)}`, backdropFilter: "blur(10px)", boxShadow: "0 10px 40px -12px rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, result.rotHintAll ? "\u21BB" : "\u{1F4E6}"), /* @__PURE__ */ React.createElement("div", { className: "flex-1", style: { fontSize: 12.5, lineHeight: 1.35, color: "#d4dce5" } }, result.rotHintAll && T.recRot(preset), !result.rotHintAll && sug && sug.type === "single" && T.recSingle(sug.name), !result.rotHintAll && sug && sug.type === "multi" && T.recMulti(sug.combo.map((x) => `${x.count}\xD7 ${x.name}`).join(" + ")), !result.rotHintAll && sug && sug.type === "toobig" && T.recTooBig(sug.item), !result.rotHintAll && !sug && T.recNoFit(unplaced)), result.rotHintAll && /* @__PURE__ */ React.createElement("button", { onClick: enableAllRotate, className: "px-3 py-1.5 rounded-lg whitespace-nowrap transition hover:brightness-110", style: { background: `linear-gradient(90deg,${C.accent},${C.teal})`, color: "#04101f", fontSize: 12, fontWeight: 700 } }, T.rotOn), !result.rotHintAll && sug && sug.type === "single" && /* @__PURE__ */ React.createElement("button", { onClick: () => applyPreset(sug.name), className: "px-3 py-1.5 rounded-lg whitespace-nowrap transition hover:brightness-110", style: { background: `linear-gradient(90deg,${C.accent},${C.teal})`, color: "#04101f", fontSize: 12, fontWeight: 700 } }, T.apply)))), /* @__PURE__ */ React.createElement("div", { style: { borderTop: "1px solid #141c27", background: hexA("#080c12", 0.7) } }, /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 sm:grid-cols-4" }, /* @__PURE__ */ React.createElement(Stat, { label: T.loaded, value: `${result.boxes}`, sub: `/ ${result.totalBoxes}`, accent: allFit ? C.good : C.warn }), /* @__PURE__ */ React.createElement(Stat, { label: T.volume, value: result.usedVol.toFixed(1), sub: `/ ${result.contVol.toFixed(1)} m\xB3`, accent: "#9ecbff" }), /* @__PURE__ */ React.createElement(Stat, { label: T.weight, value: `${Math.round(result.weight)}`, sub: num(container.payload) > 0 ? `/ ${num(container.payload)} kg` : "kg", accent: payColor }), /* @__PURE__ */ React.createElement(Stat, { label: T.layers, value: `${result.single ? result.layers : Math.max(1, result.layers) || 0}`, sub: result.single ? T.stacked : T.mixed, accent: C.teal })), /* @__PURE__ */ React.createElement("div", { className: "px-5 py-3 space-y-2.5", style: { borderTop: "1px solid #121925" } }, /* @__PURE__ */ React.createElement(Meter, { label: T.volUtil, pct: result.util, color: utilColor, text: `${result.util.toFixed(0)}%` }), num(container.payload) > 0 && /* @__PURE__ */ React.createElement(Meter, { label: T.payloadUtil, pct: Math.min(payPct, 100), color: payColor, text: `${payPct.toFixed(0)}%`, over: payPct > 100 }))))), /* @__PURE__ */ React.createElement("footer", { className: "px-5 py-2.5 flex items-center justify-between", style: { borderTop: "1px solid #121925", fontFamily: MONO, fontSize: 9.5, color: C.faint, letterSpacing: "0.08em" } }, /* @__PURE__ */ React.createElement("span", null, T.footL), /* @__PURE__ */ React.createElement("span", null, T.footR)), shareOpen && /* @__PURE__ */ React.createElement("div", { className: "fixed inset-0 flex items-center justify-center p-4", style: { zIndex: 60, background: "rgba(4,8,14,0.74)", backdropFilter: "blur(4px)" }, onClick: () => setShareOpen(false) }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), className: "w-full clrise", style: { maxWidth: 520, background: "#0c1320", borderRadius: 18, border: `1px solid ${C.fieldBorder}`, boxShadow: "0 30px 80px -20px rgba(0,0,0,0.85)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 px-5 py-3.5", style: { borderBottom: "1px solid #1a2536" } }, /* @__PURE__ */ React.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: C.accent, strokeWidth: "2.4", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "5", r: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "6", cy: "12", r: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "19", r: "3" }), /* @__PURE__ */ React.createElement("path", { d: "M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" })), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700, fontSize: 15 } }, T.shareTitle), /* @__PURE__ */ React.createElement("button", { onClick: () => setShareOpen(false), className: "ml-auto w-7 h-7 rounded-lg flex items-center justify-center transition hover:brightness-125", style: { background: "#131c2b", border: "1px solid #283649", color: C.dim, fontSize: 16, lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { className: "p-5" }, /* @__PURE__ */ React.createElement("div", { style: { color: C.dim, fontSize: 13, lineHeight: 1.5, marginBottom: 12 } }, T.shareDesc), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ React.createElement("input", { readOnly: true, value: shareURL, onFocus: (e) => e.target.select(), className: "flex-1 rounded-lg px-3 py-2.5", style: { background: C.field, border: `1px solid ${C.fieldBorder}`, color: C.text, fontSize: 12, fontFamily: MONO, outline: "none" } }), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+    })))), /* @__PURE__ */ React.createElement("main", { className: "flex-1 min-h-0 flex flex-col" }, /* @__PURE__ */ React.createElement("div", { className: "relative flex-1 min-h-[380px]" }, /* @__PURE__ */ React.createElement(Viewport, { container, result, preset, overrides: chainOverride, onSlotType }), (container.kind === "flatrack" || container.kind === "platform") && /* @__PURE__ */ React.createElement("button", { onClick: () => setForceCentered((v) => !v), className: "absolute top-4 left-1/2 clrise flex items-center gap-2 rounded-lg px-3 py-1.5", style: { transform: "translateX(-50%)", zIndex: 7, fontFamily: MONO, fontSize: 10.5, fontWeight: 600, color: forceCentered ? C.text : C.dim, background: hexA("#0a0f18", 0.86), border: `1px solid ${forceCentered ? hexA(C.accent, 0.6) : "#243042"}`, backdropFilter: "blur(8px)", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { style: { width: 11, height: 11, borderRadius: 3, border: `1px solid ${forceCentered ? C.accent : C.faint}`, background: forceCentered ? C.accent : "transparent", display: "inline-block" } }), T.forceCenter), result.oog && /* @__PURE__ */ React.createElement("div", { className: "absolute clrise", style: { top: 118, left: 16, zIndex: 5, maxWidth: 240, pointerEvents: "none" } }, /* @__PURE__ */ React.createElement("div", { className: "rounded-2xl p-3", style: { background: hexA("#0a0f18", 0.85), border: `1px solid ${hexA(C.warn, 0.45)}`, backdropFilter: "blur(10px)", boxShadow: "0 10px 40px -12px rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: C.warn, marginBottom: 5 } }, T.oogTitle), oogRows.map((r, i) => /* @__PURE__ */ React.createElement("div", { key: i, className: "flex justify-between gap-4", style: { fontFamily: MONO, fontSize: 11, lineHeight: 1.5 } }, /* @__PURE__ */ React.createElement("span", { style: { color: C.dim } }, r.lbl), /* @__PURE__ */ React.createElement("span", { style: { color: C.text, fontWeight: 700 } }, r.v + " cm"))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 11, color: "#ffd9a8", marginTop: 4, fontWeight: 600 } }, T.oogSlots(result.oogBlocked)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 8.5, lineHeight: 1.35, color: C.faint, marginTop: 6 } }, T.oogDisc))), doorFails.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "absolute top-4 left-1/2 clrise", style: { transform: "translateX(-50%)", zIndex: 6 } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 rounded-xl px-3.5 py-2", style: { background: hexA("#1a0f08", 0.9), border: `1px solid ${hexA(C.warn, 0.55)}`, backdropFilter: "blur(10px)", boxShadow: "0 10px 30px -10px rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14 } }, "\u{1F6AA}"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11.5, lineHeight: 1.3, color: "#ffd9a8", maxWidth: 250 } }, T.doorWarn(doorFails.length), " \xB7 ", T.doorHint(doorOpening.w, doorOpening.h)))), /* @__PURE__ */ React.createElement("div", { className: "absolute top-4 left-4 clrise", style: { pointerEvents: "none" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3 rounded-2xl p-3 pr-4", style: { background: hexA("#0a0f18", 0.72), border: "1px solid #1e2a3a", backdropFilter: "blur(10px)", boxShadow: "0 10px 40px -12px rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement(Gauge, { value: result.util, color: utilColor }), /* @__PURE__ */ React.createElement("div", { className: "leading-tight" }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.12em", textTransform: "uppercase", color: C.dim } }, T.loaded), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: MONO, fontSize: 22, fontWeight: 700, color: allFit ? C.good : C.text } }, result.boxes, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: C.faint } }, " / ", result.totalBoxes)), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1.5 mt-1", style: { fontSize: 11.5, fontWeight: 600, color: allFit ? C.good : C.warn } }, /* @__PURE__ */ React.createElement("span", null, allFit ? "\u2713" : "\u26A0"), /* @__PURE__ */ React.createElement("span", null, allFit ? T.allLoaded : T.open(unplaced)))))), unplaced > 0 && /* @__PURE__ */ React.createElement("div", { className: "absolute bottom-4 left-4 right-4 flex justify-center clrise", style: { pointerEvents: "none" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3 rounded-2xl px-4 py-2.5 max-w-[560px]", style: { pointerEvents: "auto", background: hexA("#0a0f18", 0.82), border: `1px solid ${hexA(result.rotHintAll || sug && sug.type === "single" ? C.accent : C.warn, 0.5)}`, backdropFilter: "blur(10px)", boxShadow: "0 10px 40px -12px rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, result.rotHintAll ? "\u21BB" : "\u{1F4E6}"), /* @__PURE__ */ React.createElement("div", { className: "flex-1", style: { fontSize: 12.5, lineHeight: 1.35, color: "#d4dce5" } }, result.rotHintAll && T.recRot(preset), !result.rotHintAll && sug && sug.type === "single" && T.recSingle(sug.name), !result.rotHintAll && sug && sug.type === "multi" && T.recMulti(sug.combo.map((x) => `${x.count}\xD7 ${x.name}`).join(" + ")), !result.rotHintAll && sug && sug.type === "toobig" && T.recTooBig(sug.item), !result.rotHintAll && !sug && T.recNoFit(unplaced)), result.rotHintAll && /* @__PURE__ */ React.createElement("button", { onClick: enableAllRotate, className: "px-3 py-1.5 rounded-lg whitespace-nowrap transition hover:brightness-110", style: { background: `linear-gradient(90deg,${C.accent},${C.teal})`, color: "#04101f", fontSize: 12, fontWeight: 700 } }, T.rotOn), !result.rotHintAll && sug && sug.type === "single" && /* @__PURE__ */ React.createElement("button", { onClick: () => applyPreset(sug.name), className: "px-3 py-1.5 rounded-lg whitespace-nowrap transition hover:brightness-110", style: { background: `linear-gradient(90deg,${C.accent},${C.teal})`, color: "#04101f", fontSize: 12, fontWeight: 700 } }, T.apply)))), /* @__PURE__ */ React.createElement("div", { style: { borderTop: "1px solid #141c27", background: hexA("#080c12", 0.7) } }, /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 sm:grid-cols-4" }, /* @__PURE__ */ React.createElement(Stat, { label: T.loaded, value: `${result.boxes}`, sub: `/ ${result.totalBoxes}`, accent: allFit ? C.good : C.warn }), /* @__PURE__ */ React.createElement(Stat, { label: T.volume, value: result.usedVol.toFixed(1), sub: `/ ${result.contVol.toFixed(1)} m\xB3`, accent: "#9ecbff" }), /* @__PURE__ */ React.createElement(Stat, { label: T.weight, value: `${Math.round(result.weight)}`, sub: num(container.payload) > 0 ? `/ ${num(container.payload)} kg` : "kg", accent: payColor }), /* @__PURE__ */ React.createElement(Stat, { label: T.layers, value: `${result.single ? result.layers : Math.max(1, result.layers) || 0}`, sub: result.single ? T.stacked : T.mixed, accent: C.teal })), /* @__PURE__ */ React.createElement("div", { className: "px-5 py-3 space-y-2.5", style: { borderTop: "1px solid #121925" } }, /* @__PURE__ */ React.createElement(Meter, { label: T.volUtil, pct: result.util, color: utilColor, text: `${result.util.toFixed(0)}%` }), num(container.payload) > 0 && /* @__PURE__ */ React.createElement(Meter, { label: T.payloadUtil, pct: Math.min(payPct, 100), color: payColor, text: `${payPct.toFixed(0)}%`, over: payPct > 100 }))))), /* @__PURE__ */ React.createElement("footer", { className: "px-5 py-2.5 flex items-center justify-between", style: { borderTop: "1px solid #121925", fontFamily: MONO, fontSize: 9.5, color: C.faint, letterSpacing: "0.08em" } }, /* @__PURE__ */ React.createElement("span", null, T.footL), /* @__PURE__ */ React.createElement("span", null, T.footR)), shareOpen && /* @__PURE__ */ React.createElement("div", { className: "fixed inset-0 flex items-center justify-center p-4", style: { zIndex: 60, background: "rgba(4,8,14,0.74)", backdropFilter: "blur(4px)" }, onClick: () => setShareOpen(false) }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), className: "w-full clrise", style: { maxWidth: 520, background: "#0c1320", borderRadius: 18, border: `1px solid ${C.fieldBorder}`, boxShadow: "0 30px 80px -20px rgba(0,0,0,0.85)" } }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 px-5 py-3.5", style: { borderBottom: "1px solid #1a2536" } }, /* @__PURE__ */ React.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: C.accent, strokeWidth: "2.4", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "5", r: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "6", cy: "12", r: "3" }), /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "19", r: "3" }), /* @__PURE__ */ React.createElement("path", { d: "M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" })), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700, fontSize: 15 } }, T.shareTitle), /* @__PURE__ */ React.createElement("button", { onClick: () => setShareOpen(false), className: "ml-auto w-7 h-7 rounded-lg flex items-center justify-center transition hover:brightness-125", style: { background: "#131c2b", border: "1px solid #283649", color: C.dim, fontSize: 16, lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { className: "p-5" }, /* @__PURE__ */ React.createElement("div", { style: { color: C.dim, fontSize: 13, lineHeight: 1.5, marginBottom: 12 } }, T.shareDesc), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2" }, /* @__PURE__ */ React.createElement("input", { readOnly: true, value: shareURL, onFocus: (e) => e.target.select(), className: "flex-1 rounded-lg px-3 py-2.5", style: { background: C.field, border: `1px solid ${C.fieldBorder}`, color: C.text, fontSize: 12, fontFamily: MONO, outline: "none" } }), /* @__PURE__ */ React.createElement("button", { onClick: () => {
       try {
         navigator.clipboard.writeText(shareURL).then(() => setShareCopied(true), () => {
         });
