@@ -631,7 +631,16 @@ var __QRLIB=(()=>{var or=(L,T)=>()=>{try{return T||L((T={exports:{}}).exports,T)
   }
   var LANG = (() => {
     try {
-      return (new URLSearchParams(window.location.search).get("lang") || "").toLowerCase().startsWith("en") ? "en" : "de";
+      // Vorrang: ?lang aus der URL. Netlifys Clean-URL-Rewrite (/app.html -> /app) kann den
+      // Query-String verwerfen; dann faellt die Sprache auf die im Browser gemerkte Wahl
+      // (localStorage.cl_lang, von der Landingpage gesetzt) zurueck, dann auf navigator.language.
+      var p = (new URLSearchParams(window.location.search).get("lang") || "").toLowerCase();
+      if (p) return p.startsWith("en") ? "en" : "de";
+      var stored = (window.localStorage.getItem("cl_lang") || "").toLowerCase();
+      if (stored) return stored.startsWith("en") ? "en" : "de";
+      var nav = (navigator.language || "").toLowerCase();
+      if (nav) return nav.startsWith("de") ? "de" : "en";
+      return "de";
     } catch (e) {
       return "de";
     }
