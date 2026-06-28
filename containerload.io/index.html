@@ -90,6 +90,31 @@ details[open] .faq-plus{transform:rotate(45deg)}
 .chatmsg{opacity:0;transform:translateY(8px);transition:.4s}
 .chatmsg.in{opacity:1;transform:none}
 ::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-track{background:#080c12}::-webkit-scrollbar-thumb{background:#243042;border-radius:6px}
+/* --- Hero "Re-Solve" Animation (clh-*) --- */
+.clh-stage{position:relative;width:100%;aspect-ratio:1.18/1;min-height:380px}
+@media(max-width:920px){.clh-stage{aspect-ratio:1.05/1}}
+#clhScene{position:absolute;inset:0;width:100%;height:100%;display:none}
+.clh-poster{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:6% 4%}
+.clh-pill{position:absolute;z-index:6;display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;font-weight:600;
+  padding:7px 11px;border-radius:11px;background:rgba(12,19,32,.82);border:1px solid var(--line2);color:var(--dim);
+  box-shadow:0 12px 30px -12px rgba(0,0,0,.8);backdrop-filter:blur(8px);transition:.4s;white-space:nowrap}
+@keyframes clhfloaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.clh-pill.f1{top:7%;left:4%;animation:clhfloaty 5s ease-in-out infinite}
+.clh-pill.f2{top:11%;right:5%;animation:clhfloaty 4.3s ease-in-out infinite .6s}
+.clh-dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.clh-timeline{position:absolute;left:50%;bottom:3%;transform:translateX(-50%);z-index:6;display:flex;align-items:center;
+  padding:6px 8px;border-radius:13px;background:rgba(10,15,24,.7);border:1px solid var(--line2);backdrop-filter:blur(10px)}
+.clh-step{display:flex;align-items:center;gap:7px;padding:5px 9px;border-radius:9px;transition:.35s}
+.clh-step .clh-sd{width:8px;height:8px;border-radius:50%;background:#2a3646;transition:.35s;flex-shrink:0}
+.clh-step .clh-sl{font-family:var(--mono);font-size:10.5px;font-weight:600;color:var(--faint);transition:.35s;white-space:nowrap}
+.clh-step.on .clh-sl{color:var(--text)}
+.clh-sep{width:16px;height:1px;background:#222d3b;margin:0 2px}
+@media(max-width:520px){.clh-step .clh-sl{display:none}.clh-step{padding:5px}}
+.clh-status{margin-top:24px;display:flex;align-items:center;gap:12px;max-width:480px;border:1px solid var(--line2);border-radius:14px;
+  padding:12px 14px;background:rgba(10,15,24,.55);backdrop-filter:blur(10px);transition:border-color .4s,box-shadow .4s}
+.clh-status .clh-ic{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;font-size:15px;transition:.4s}
+.clh-status .clh-txt{font-family:var(--mono);font-size:13px;font-weight:600;line-height:1.25;transition:color .35s}
+.clh-status .clh-meta{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:2px}
 </style>
 </head>
 <body>
@@ -139,22 +164,68 @@ details[open] .faq-plus{transform:rotate(45deg)}
 
 <!-- HERO -->
 <header id="top" class="relative z-10 max-w-7xl mx-auto px-5 pt-32 md:pt-40 pb-20">
-  <div class="max-w-3xl mx-auto text-center">
-    <div data-i18n="hero_badge" class="inline-flex items-center gap-2 mono text-[11px] px-3 py-1.5 rounded-full mb-6" style="border:1px solid var(--line2);color:var(--dim)">
-      <span class="live-dot"></span> PALETTENGENAU · 3D-ANSICHT
+  <div class="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+    <div class="text-center lg:text-left">
+      <div data-i18n="hero_badge" class="inline-flex items-center gap-2 mono text-[11px] px-3 py-1.5 rounded-full mb-6" style="border:1px solid var(--line2);color:var(--dim)">
+        <span class="live-dot"></span> PALETTENGENAU · 3D-ANSICHT
+      </div>
+      <h1 data-i18n="hero_h1" class="font-extrabold leading-[1.02] tracking-tight text-[46px] md:text-[56px]">
+        Jede Ladung.<br><span class="grad-text">Im richtigen Container.</span>
+      </h1>
+      <p data-i18n="hero_sub" class="mt-6 text-[17px] md:text-[19px] leading-relaxed max-w-[560px] mx-auto lg:mx-0" style="color:var(--dim)">
+        3D-Beladung, palettengenaue Berechnung und automatische Container-Empfehlung – in Sekunden, direkt im Browser. Kein Excel, kein Schätzen.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3 justify-center lg:justify-start">
+        <a data-i18n="hero_cta1" href="app.html" class="btn btn-primary text-[15px] px-6 py-3.5">Tool öffnen – kostenlos</a>
+        <a data-i18n="hero_cta2" href="#demo" class="btn btn-ghost text-[15px] px-6 py-3.5">Direkt ausprobieren <span style="color:var(--accent)">↓</span></a>
+      </div>
+      <div data-i18n="hero_trust" class="mt-7 flex items-center gap-5 justify-center lg:justify-start mono text-[12px]" style="color:var(--faint)">
+        <span>✓ Ohne Account</span><span>✓ 0 € Setup</span><span>✓ ISO 668</span>
+      </div>
+      <!-- Status-Strip: laeuft synchron zur 3D-Hero-Animation (Texte vom clh-Modul gesetzt, kein data-i18n) -->
+      <div class="clh-status mx-auto lg:mx-0" id="clhStatus" style="border-color:#37d39f;box-shadow:0 0 26px -10px #37d39f">
+        <div class="clh-ic" id="clhStatusIc" style="background:#37d39f;color:#04101f">✓</div>
+        <div>
+          <div class="clh-txt" id="clhStatusTxt" style="color:#37d39f">Alles verstaut</div>
+          <div class="clh-meta" id="clhStatusMeta">1× 40′ GP · gelöst</div>
+        </div>
+      </div>
     </div>
-    <h1 data-i18n="hero_h1" class="font-extrabold leading-[1.02] tracking-tight text-[46px] md:text-[56px]">
-      Jede Ladung.<br><span class="grad-text">Im richtigen Container.</span>
-    </h1>
-    <p data-i18n="hero_sub" class="mt-6 text-[17px] md:text-[19px] leading-relaxed max-w-[560px] mx-auto" style="color:var(--dim)">
-      3D-Beladung, palettengenaue Berechnung und automatische Container-Empfehlung – in Sekunden, direkt im Browser. Kein Excel, kein Schätzen.
-    </p>
-    <div class="mt-8 flex flex-wrap gap-3 justify-center">
-      <a data-i18n="hero_cta1" href="app.html" class="btn btn-primary text-[15px] px-6 py-3.5">Tool öffnen – kostenlos</a>
-      <a data-i18n="hero_cta2" href="#demo" class="btn btn-ghost text-[15px] px-6 py-3.5">Direkt ausprobieren <span style="color:var(--accent)">↓</span></a>
-    </div>
-    <div data-i18n="hero_trust" class="mt-7 flex items-center gap-5 justify-center mono text-[12px]" style="color:var(--faint)">
-      <span>✓ Ohne Account</span><span>✓ 0 € Setup</span><span>✓ ISO 668</span>
+    <!-- Re-Solve 3D-Hero (rechte Spalte) -->
+    <div class="clh-stage reveal">
+      <div class="clh-pill f1" id="clhPillType"><span class="clh-dot" style="background:#37d39f"></span> 40′ GP</div>
+      <div class="clh-pill f2" id="clhPillFit"><span class="clh-dot" style="background:#37d39f"></span> ✓ passt</div>
+
+      <!-- SVG-Standbild: Default sichtbar, auf Desktop vom Canvas ersetzt -->
+      <div class="clh-poster" id="clhPoster" aria-hidden="true">
+        <svg viewBox="0 0 600 460" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+          <g fill="none" stroke="#37d39f" stroke-width="2" stroke-linejoin="round" opacity="0.92">
+            <path d="M120 300 L120 175 L470 175 L470 300 Z"/>
+            <path d="M120 175 L165 140 L515 140 L470 175"/>
+            <path d="M470 175 L515 140 L515 265 L470 300"/>
+          </g>
+          <g opacity="0.96">
+            <rect x="150" y="235" width="62" height="60" fill="#1d4a48" stroke="#37d39f" stroke-width="1.6"/>
+            <rect x="218" y="235" width="62" height="60" fill="#1d4a48" stroke="#37d39f" stroke-width="1.6"/>
+            <rect x="150" y="200" width="62" height="34" fill="#1d4a48" stroke="#37d39f" stroke-width="1.6"/>
+            <rect x="286" y="235" width="62" height="60" fill="#1d4a48" stroke="#37d39f" stroke-width="1.6"/>
+            <rect x="218" y="200" width="62" height="34" fill="#1d4a48" stroke="#37d39f" stroke-width="1.6"/>
+          </g>
+          <line x1="105" y1="300" x2="500" y2="300" stroke="#16212d" stroke-width="2"/>
+        </svg>
+      </div>
+
+      <canvas id="clhScene"></canvas>
+
+      <div class="clh-timeline" id="clhTimeline">
+        <div class="clh-step" data-k="load"><span class="clh-sd"></span><span class="clh-sl">Laden</span></div>
+        <div class="clh-sep"></div>
+        <div class="clh-step" data-k="conflict"><span class="clh-sd"></span><span class="clh-sl">Konflikt</span></div>
+        <div class="clh-sep"></div>
+        <div class="clh-step" data-k="solve"><span class="clh-sd"></span><span class="clh-sl">Lösen</span></div>
+        <div class="clh-sep"></div>
+        <div class="clh-step on" data-k="done"><span class="clh-sd" style="background:#37d39f;box-shadow:0 0 10px #37d39f"></span><span class="clh-sl">Gelöst</span></div>
+      </div>
     </div>
   </div>
 
@@ -332,6 +403,290 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){
   try{var sv=localStorage.getItem('cl_lang'); if(sv){initial=sv;} else if((navigator.language||'').toLowerCase().indexOf('de')!==0){initial='en';}}
   catch(e){if((navigator.language||'').toLowerCase().indexOf('de')!==0){initial='en';}}
   setLang(initial);
+})();
+</script>
+<!-- Hero "Re-Solve" 3D-Animation: eigenstaendiges Modul, laedt Three.js r128 lazy -->
+<script>
+/* ContainerLoad — Hero "Re-Solve" Animation (production module)
+   Selbstständig, kein Build-Step. Three.js r128 wird lazy nachgeladen.
+   Greift NICHT in ?p=, app.html oder die i18n-Logik ein. */
+(function(){
+  "use strict";
+  var canvas=document.getElementById('clhScene');
+  var poster=document.getElementById('clhPoster');
+  if(!canvas) return;
+
+  var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var COARSE  = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  var SMALL   = window.innerWidth < 760;
+  // Auf Mobil / Touch / reduzierter Bewegung: kein WebGL, SVG-Standbild bleibt stehen.
+  if(REDUCED || COARSE || SMALL) return;
+
+  var TOTAL=14, OVERFLOW=3;
+
+  // ---------- i18n strings (folgt document.documentElement.lang) ----------
+  function lang(){ return (document.documentElement.lang==='en')?'en':'de'; }
+  var STA={
+    intro:{ic:'…',col:'#2f9bff',tl:'load',fitCol:'#ffb454',
+      txt:{de:'Ladung wird vorbereitet…',en:'Preparing cargo…'},
+      meta:{de:'20′ GP · live',en:'20′ GP · live'}, type:{de:"20′ GP",en:"20′ GP"}, fit:{de:'prüfe…',en:'checking…'}},
+    pack:{ic:'▣',col:'#2f9bff',tl:'load',fitCol:'#2f9bff',
+      txt:{de:'Packe in den 20′ GP…',en:'Loading the 20′ GP…'},
+      meta:{de:'{n} / {T} verstaut',en:'{n} / {T} stowed'}, type:{de:"20′ GP",en:"20′ GP"}, fit:{de:'lädt…',en:'loading…'}},
+    over:{ic:'✕',col:'#ff6b78',tl:'conflict',fitCol:'#ff6b78',
+      txt:{de:'{O} Packstücke passen nicht',en:"{O} items don't fit"},
+      meta:{de:'20′ GP · zu klein',en:'20′ GP · too small'}, type:{de:"20′ GP",en:"20′ GP"}, fit:{de:'✕ {O} außerhalb',en:'✕ {O} outside'}},
+    solve:{ic:'⟳',col:'#38e0c8',tl:'solve',fitCol:'#38e0c8',
+      txt:{de:'Passender Container wird gesucht',en:'Finding the right container'},
+      meta:{de:'rechnet{dots}',en:'calculating{dots}'}, type:{de:'rechnet…',en:'calculating…'}, fit:{de:'⟳ vermesse',en:'⟳ measuring'}},
+    repack:{ic:'→',col:'#38e0c8',tl:'done',fitCol:'#38e0c8',
+      txt:{de:'Container wird zum 40′ GP',en:'Container grows to 40′ GP'},
+      meta:{de:'{n} / {T} verstaut',en:'{n} / {T} stowed'}, type:{de:"40′ GP",en:"40′ GP"}, fit:{de:'passt rein…',en:'fitting…'}},
+    done:{ic:'✓',col:'#37d39f',tl:'done',fitCol:'#37d39f',
+      txt:{de:'Alles verstaut',en:'All stowed'},
+      meta:{de:'1× 40′ GP · gelöst',en:'1× 40′ GP · solved'}, type:{de:"40′ GP",en:"40′ GP"}, fit:{de:'✓ passt',en:'✓ fits'}}
+  };
+  var TLL={load:{de:'Laden',en:'Load'},conflict:{de:'Konflikt',en:'Conflict'},solve:{de:'Lösen',en:'Solve'},done:{de:'Gelöst',en:'Solved'}};
+
+  // ---------- DOM ----------
+  var statusBox=document.getElementById('clhStatus'),statusIc=document.getElementById('clhStatusIc'),
+      statusTxt=document.getElementById('clhStatusTxt'),statusMeta=document.getElementById('clhStatusMeta'),
+      pillType=document.getElementById('clhPillType'),pillFit=document.getElementById('clhPillFit'),tlSteps={};
+  document.querySelectorAll('#clhTimeline .clh-step').forEach(function(s){tlSteps[s.getAttribute('data-k')]=s;});
+  var lastKey='',lastLang='';
+  function setTimeline(active){
+    Object.keys(tlSteps).forEach(function(k){
+      var on=(k===active),st=tlSteps[k];st.classList.toggle('on',on);
+      var col= active==='conflict'&&k==='conflict'?'#ff6b78':active==='solve'&&k==='solve'?'#38e0c8':active==='done'&&k==='done'?'#37d39f':on?'#2f9bff':'#2a3646';
+      var sd=st.querySelector('.clh-sd'); if(sd){sd.style.background=col; sd.style.boxShadow=on?('0 0 10px '+col):'none';}
+    });
+  }
+  function applyStatus(key,n,t){
+    var L=lang(),s=STA[key],dots='.'.repeat(1+Math.floor((t*3)%3));
+    function fill(x){return x.replace('{n}',n).replace('{T}',TOTAL).replace('{O}',OVERFLOW).replace('{dots}',dots);}
+    if(statusTxt) statusTxt.textContent=fill(s.txt[L]);
+    if(statusMeta) statusMeta.textContent=fill(s.meta[L]);
+    if(pillType&&pillType.lastChild) pillType.lastChild.textContent=' '+s.type[L];
+    if(pillFit) pillFit.innerHTML='<span class="clh-dot" style="background:'+s.fitCol+'"></span> '+fill(s.fit[L]);
+    if(key!==lastKey){
+      if(statusTxt) statusTxt.style.color=s.col;
+      if(statusIc){statusIc.textContent=s.ic; statusIc.style.background=s.col; statusIc.style.color='#04101f';}
+      if(statusBox){statusBox.style.borderColor=s.col; statusBox.style.boxShadow='0 0 26px -10px '+s.col;}
+      if(pillType){var d=pillType.querySelector('.clh-dot'); if(d)d.style.background=s.col;}
+      setTimeline(s.tl); lastKey=key;
+    }
+    if(L!==lastLang){ Object.keys(tlSteps).forEach(function(k){var sl=tlSteps[k].querySelector('.clh-sl'); if(sl&&TLL[k])sl.textContent=TLL[k][L];}); lastLang=L; }
+  }
+
+  // ---------- lazy-load three r128, init on first view ----------
+  var started=false, raf=0, running=false;
+  function ensureThree(cb){ if(window.THREE) return cb();
+    var s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+    s.async=true; s.onload=cb; s.onerror=function(){}; document.head.appendChild(s); }
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){
+    if(e.isIntersecting){ if(!started){started=true; ensureThree(function(){ if(!window.THREE)return; build(); poster&&(poster.style.display='none'); canvas.style.display='block'; resume(); }); } else resume(); }
+    else pause();
+  });},{threshold:0.12});
+  io.observe(canvas);
+  document.addEventListener('visibilitychange',function(){ if(document.hidden) pause(); else if(started) resume(); });
+  function pause(){ running=false; if(raf){cancelAnimationFrame(raf);raf=0;} }
+  function resume(){ if(running||!started)return; running=true; clock&&clock.start(); raf=requestAnimationFrame(loop); }
+
+  // ====================== SCENE ======================
+  var renderer,scene,camera,pivot,CONT,shadow,sweep,scanGroup,bracketMat,bboxMat,clock;
+  var boxes=[],repackRank=[],lbMin,lbMax,bc,bs;
+  var C_TEAL=0x38e0c8,C_GOOD=0x37d39f,C_WARN=0xffb454,C_BLUEEDGE=0x4fa8ff;
+  var CAM_BASE={x:0.0,y:1.4,z:6.0,lx:0.0}, CAM_WIDE={x:1.0,y:1.7,z:8.7,lx:1.25};
+  var XL=-1.25,L0=2.5,W=1.0,H=1.16,BL=0.62,BH=0.52,BW=0.46,DROP=5.4;
+  var _ca,_cb,_tmp;
+
+  function clamp01(x){return x<0?0:x>1?1:x;}
+  function lerp(a,b,t){return a+(b-a)*t;}
+  function smooth(t){t=clamp01(t);return t*t*(3-2*t);}
+  function easeOutBack(x){var c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2);}
+  function easeInOut(x){return x<0.5?2*x*x:1-Math.pow(-2*x+2,2)/2;}
+  function gravityBounce(x){x=clamp01(x); if(x<0.86){var t=x/0.86;return t*t*(3-2*t);} var u=(x-0.86)/0.14; return 1-Math.sin(u*Math.PI)*0.025;}
+  function lerpV(out,a,b,t){out.set(lerp(a.x,b.x,t),lerp(a.y,b.y,t),lerp(a.z,b.z,t));}
+  function colLerp(target,a,b,t){_ca.setHex(a);_cb.setHex(b);target.copy(_ca).lerp(_cb,clamp01(t));}
+
+  var PH=[{n:'intro',d:1.1},{n:'pack',d:3.6},{n:'overflow',d:1.5},{n:'solve',d:1.2},
+          {n:'grow',d:1.1},{n:'repack',d:2.4},{n:'success',d:2.0},{n:'outro',d:0.9}];
+  var START={},CYCLE=0; PH.forEach(function(p){START[p.n]=CYCLE;CYCLE+=p.d;});
+  function phaseAt(ct){var acc=0;for(var i=0;i<PH.length;i++){if(ct<acc+PH[i].d)return{n:PH[i].n,p:(ct-acc)/PH[i].d,i:i};acc+=PH[i].d;}return{n:'outro',p:1,i:PH.length-1};}
+
+  function shadowTex(){var c=document.createElement('canvas');c.width=c.height=128;var g=c.getContext('2d');
+    var grd=g.createRadialGradient(64,64,0,64,64,64);grd.addColorStop(0,'rgba(0,0,0,.5)');grd.addColorStop(.6,'rgba(0,0,0,.18)');grd.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=grd;g.fillRect(0,0,128,128);return new THREE.CanvasTexture(c);}
+  function sweepTex(){var s=96,c=document.createElement('canvas');c.width=c.height=s;var g=c.getContext('2d');
+    var img=g.createImageData(s,s);
+    for(var y=0;y<s;y++){for(var x=0;x<s;x++){var u=Math.abs(x/(s-1)-0.5)*2,v=Math.abs(y/(s-1)-0.5)*2;
+      var au=Math.max(0,1-u*u),av=Math.max(0,1-Math.pow(v,0.6)),a=Math.pow(av,2.2)*au,i=(y*s+x)*4;
+      img.data[i]=150;img.data[i+1]=245;img.data[i+2]=225;img.data[i+3]=Math.round(a*255);}}
+    g.putImageData(img,0,0);return new THREE.CanvasTexture(c);}
+
+  function packPositions(cx,lengthU,n){
+    var bl=0.62,zc=[-0.26,0.26],yc=[0.28,0.82];
+    var usable=lengthU-0.18,step=bl+0.04,cols=Math.max(1,Math.floor(usable/step)),startX=cx-(cols-1)*step/2,out=[];
+    for(var c=0;c<cols;c++){var x=startX+c*step;for(var l=0;l<2;l++){for(var z=0;z<2;z++){out.push(new THREE.Vector3(x,yc[l],zc[z]));}}}
+    return out.slice(0,n);
+  }
+  function makeContainer(){
+    var grp=new THREE.Group();
+    var edgeMat=new THREE.LineBasicMaterial({color:C_BLUEEDGE,transparent:true,opacity:0.55});
+    var shell=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(L0,H,W)),edgeMat); shell.position.set(0,H/2,0); grp.add(shell);
+    var endMat=new THREE.LineBasicMaterial({color:C_TEAL,transparent:true,opacity:0.6});
+    var end=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(0.01,H,W)),endMat); end.position.set(L0/2,H/2,0); grp.add(end);
+    var grid=new THREE.GridHelper(L0,5,0x2a3a4f,0x16212d); grid.material.transparent=true; grid.material.opacity=0.42; grid.position.y=0.002; grp.add(grid);
+    pivot.add(grp);
+    return {grp:grp,edgeMat:edgeMat,endMat:endMat,gridMat:grid.material,
+      setLength:function(L){grp.scale.x=L/L0; grp.position.x=XL+L/2;},
+      setColor:function(hex){edgeMat.color.setHex(hex); endMat.color.setHex(hex);},
+      setOpacity:function(o){edgeMat.opacity=0.55*o; endMat.opacity=0.6*o; grid.material.opacity=0.42*o;}};
+  }
+  function placeShadow(L){shadow.scale.x=L*1.35; shadow.position.x=XL+L/2;}
+
+  function build(){
+    _ca=new THREE.Color(); _cb=new THREE.Color(); _tmp=new THREE.Vector3();
+    renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:true});
+    renderer.setClearColor(0x000000,0); renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    scene=new THREE.Scene();
+    camera=new THREE.PerspectiveCamera(42,1,0.1,100); camera.position.set(CAM_BASE.x,CAM_BASE.y,CAM_BASE.z);
+    pivot=new THREE.Object3D(); scene.add(pivot);
+    scene.add(new THREE.AmbientLight(0x9fb6d6,0.6));
+    var key=new THREE.DirectionalLight(0xffffff,1.05); key.position.set(4,6,5); scene.add(key);
+    var fillL=new THREE.PointLight(0x2f9bff,0.7,40); fillL.position.set(-5,2,-2); scene.add(fillL);
+
+    CONT=makeContainer(); CONT.setLength(L0);
+    shadow=new THREE.Mesh(new THREE.PlaneGeometry(1,3.0),new THREE.MeshBasicMaterial({map:shadowTex(),transparent:true,opacity:0.8,depthWrite:false}));
+    shadow.rotation.x=-Math.PI/2; shadow.position.y=-0.004; pivot.add(shadow);
+
+    var inside20=packPositions(0,2.5,12).slice(0,11);
+    var over=[ new THREE.Vector3(1.80,0.30,-0.22), new THREE.Vector3(2.20,0.30,0.24), new THREE.Vector3(1.98,0.84,0.02) ];
+    var final40=packPositions(1.25,5.0,14);
+    for(var i=0;i<TOTAL;i++){
+      var geo=new THREE.BoxGeometry(BL,BH,BW);
+      var mat=new THREE.MeshStandardMaterial({color:0x1a3e5f,metalness:0.12,roughness:0.6,transparent:true,opacity:1});
+      var m=new THREE.Mesh(geo,mat);
+      var em=new THREE.LineBasicMaterial({color:C_BLUEEDGE,transparent:true,opacity:0.78});
+      m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),em)); pivot.add(m);
+      var staged=i<11?inside20[i].clone():over[i-11].clone();
+      var intro=new THREE.Vector3(staged.x,staged.y+DROP,staged.z);
+      boxes.push({mesh:m,mat:mat,edge:em,intro:intro,staged:staged,finalT:final40[i].clone(),isOver:(i>=11)});
+    }
+    var order=boxes.map(function(b,idx){return idx;}).sort(function(a,b){return (boxes[a].finalT.x-boxes[b].finalT.x)||(boxes[a].finalT.y-boxes[b].finalT.y);});
+    order.forEach(function(idx,rank){repackRank[idx]=rank;});
+
+    // bbox of staged load -> measurement brackets
+    lbMin=new THREE.Vector3(1e9,1e9,1e9); lbMax=new THREE.Vector3(-1e9,-1e9,-1e9);
+    boxes.forEach(function(b){var s=b.staged;
+      lbMin.x=Math.min(lbMin.x,s.x-BL/2);lbMax.x=Math.max(lbMax.x,s.x+BL/2);
+      lbMin.y=Math.min(lbMin.y,s.y-BH/2);lbMax.y=Math.max(lbMax.y,s.y+BH/2);
+      lbMin.z=Math.min(lbMin.z,s.z-BW/2);lbMax.z=Math.max(lbMax.z,s.z+BW/2);});
+    var MG=0.07; lbMin.x-=MG;lbMax.x+=MG;lbMin.y-=MG;lbMax.y+=MG;lbMin.z-=MG;lbMax.z+=MG;
+    bc=new THREE.Vector3().addVectors(lbMin,lbMax).multiplyScalar(0.5);
+    bs=new THREE.Vector3().subVectors(lbMax,lbMin);
+    var arm=0.24,V=[];
+    for(var sx=0;sx<2;sx++)for(var sy=0;sy<2;sy++)for(var sz=0;sz<2;sz++){
+      var X=sx?lbMax.x:lbMin.x,Y=sy?lbMax.y:lbMin.y,Z=sz?lbMax.z:lbMin.z;
+      var dx=sx?-1:1,dy=sy?-1:1,dz=sz?-1:1,ox=X-bc.x,oy=Y-bc.y,oz=Z-bc.z;
+      V.push(ox,oy,oz,ox+dx*arm,oy,oz, ox,oy,oz,ox,oy+dy*arm,oz, ox,oy,oz,ox,oy,oz+dz*arm);
+    }
+    var bgeo=new THREE.BufferGeometry(); bgeo.setAttribute('position',new THREE.Float32BufferAttribute(V,3));
+    bracketMat=new THREE.LineBasicMaterial({color:C_TEAL,transparent:true,opacity:0});
+    bboxMat=new THREE.LineBasicMaterial({color:C_TEAL,transparent:true,opacity:0});
+    scanGroup=new THREE.Group();
+    scanGroup.add(new THREE.LineSegments(bgeo,bracketMat));
+    scanGroup.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(bs.x,bs.y,bs.z)),bboxMat));
+    scanGroup.position.copy(bc); scanGroup.visible=false; pivot.add(scanGroup);
+    sweep=new THREE.Mesh(new THREE.PlaneGeometry(bs.x+0.5,0.16),new THREE.MeshBasicMaterial({map:sweepTex(),transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+    sweep.position.set(bc.x,bc.y,0.05); pivot.add(sweep);
+
+    clock=new THREE.Clock(); sizeUp();
+    window.addEventListener('resize',sizeUp);
+    window.addEventListener('pointermove',onMove);
+  }
+
+  function sizeUp(){var r=canvas.getBoundingClientRect();var w=Math.max(1,r.width),h=Math.max(1,r.height);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+  var tx=0,ty=0,px=0,py=0;
+  function onMove(e){var nx=(e.clientX/window.innerWidth)*2-1,ny=(e.clientY/window.innerHeight)*2-1;tx=nx*0.14;ty=ny*0.08;}
+
+  function update(ct,t){
+    var ph=phaseAt(ct),name=ph.n,p=ph.p,fade=1,dim=1,sweepOp=0,L=L0;
+    var camX=CAM_BASE.x,camY=CAM_BASE.y,camZ=CAM_BASE.z,camLx=CAM_BASE.lx,placed=0;
+    if(name==='intro')fade=smooth(p/0.5);
+    if(name==='outro')fade=1-smooth(p);
+
+    if(name==='intro'){
+      boxes.forEach(function(b){b.mesh.position.copy(b.intro);b.edge.color.setHex(C_BLUEEDGE);b.mat.color.setHex(0x1a3e5f);b.mesh.scale.setScalar(1);});
+      CONT.setColor(C_BLUEEDGE); applyStatus('intro',0,t);
+    } else if(name==='pack'){
+      var stag=0.17,dur=1.05,tt=p*PH[1].d;
+      boxes.forEach(function(b,i){var lp=clamp01((tt-i*stag)/dur);
+        b.mesh.position.set(b.staged.x,lerp(b.intro.y,b.staged.y,gravityBounce(lp)),b.staged.z);
+        if(lp>=1&&!b.isOver)placed++; b.mesh.scale.setScalar(1);
+        b.edge.color.setHex(b.isOver&&lp>=1?C_WARN:C_BLUEEDGE); b.mat.color.setHex(b.isOver&&lp>=1?0x55401d:0x1a3e5f);});
+      CONT.setColor(C_BLUEEDGE); applyStatus('pack',placed,t);
+    } else if(name==='overflow'){
+      var pulse=0.5+0.5*Math.sin(t*5.0);
+      boxes.forEach(function(b){b.mesh.position.copy(b.staged);
+        if(b.isOver){b.mesh.position.y=b.staged.y+pulse*0.05;b.edge.color.setHex(C_WARN);b.mat.color.setHex(0x55401d);b.mesh.scale.setScalar(1+pulse*0.04);}
+        else{b.edge.color.setHex(C_BLUEEDGE);b.mat.color.setHex(0x1a3e5f);b.mesh.scale.setScalar(1);}});
+      CONT.setColor(C_WARN); placed=TOTAL-OVERFLOW; applyStatus('over',placed,t);
+    } else if(name==='solve'){
+      dim=lerp(1,0.30,smooth(Math.min(p*1.4,1)));
+      var sp=easeInOut(clamp01(p/0.78)); sweep.position.y=lerp(lbMax.y+0.45,lbMin.y-0.25,sp); sweepOp=Math.sin(clamp01(p/0.78)*Math.PI);
+      scanGroup.visible=true; scanGroup.scale.setScalar(lerp(1.16,1.0,smooth(clamp01(p/0.4))));
+      var inn=smooth(clamp01(p/0.22)),pl=0.78+0.22*Math.sin(t*5.0); bracketMat.opacity=inn*pl; bboxMat.opacity=inn*0.20;
+      boxes.forEach(function(b){b.mesh.position.copy(b.staged);b.mesh.scale.setScalar(1);
+        if(b.isOver){b.edge.color.setHex(C_WARN);b.mat.color.setHex(0x55401d);}else{b.edge.color.setHex(C_BLUEEDGE);b.mat.color.setHex(0x1a3e5f);}});
+      CONT.setColor(C_WARN); applyStatus('solve',0,t);
+    } else if(name==='grow'||name==='repack'){
+      var growP=name==='grow'?smooth(p):1;
+      if(name==='grow'){var go=1-smooth(clamp01(p/0.3)); scanGroup.visible=go>0.02; bracketMat.opacity=go*0.8; bboxMat.opacity=go*0.16;}
+      L=lerp(2.5,5.0,growP);
+      camX=lerp(CAM_BASE.x,CAM_WIDE.x,growP);camY=lerp(CAM_BASE.y,CAM_WIDE.y,growP);camZ=lerp(CAM_BASE.z,CAM_WIDE.z,growP);camLx=lerp(CAM_BASE.lx,CAM_WIDE.lx,growP);
+      colLerp(_ca,C_WARN,C_TEAL,growP); CONT.edgeMat.color.copy(_ca); CONT.endMat.color.copy(_ca);
+      var winT=(START[name]-START['grow'])+p*PH[ph.i].d,stag2=0.15,dur2=0.6;
+      boxes.forEach(function(b,i){var rank=repackRank[i],lp=clamp01((winT-rank*stag2)/dur2);
+        lerpV(_tmp,b.staged,b.finalT,smooth(lp)); _tmp.y=lerp(b.staged.y,b.finalT.y,easeOutBack(lp));
+        b.mesh.position.copy(_tmp); b.mesh.scale.setScalar(1);
+        if(lp>=1){b.edge.color.setHex(C_GOOD);b.mat.color.setHex(0x1d4a48);placed++;}
+        else{b.edge.color.setHex(b.isOver?C_WARN:C_BLUEEDGE);b.mat.color.setHex(b.isOver?0x55401d:0x1a3e5f);}});
+      applyStatus('repack',placed,t);
+    } else if(name==='success'){
+      L=5.0;camX=CAM_WIDE.x;camY=CAM_WIDE.y;camZ=CAM_WIDE.z;camLx=CAM_WIDE.lx;
+      var g=0.6+0.4*(0.5+0.5*Math.sin(t*2.2));
+      CONT.setColor(C_GOOD); CONT.edgeMat.opacity=0.55*(0.6+0.4*g)+0.2; CONT.endMat.opacity=0.6*(0.6+0.4*g)+0.2;
+      boxes.forEach(function(b){b.mesh.position.copy(b.finalT);b.edge.color.setHex(C_GOOD);b.mat.color.setHex(0x1d4a48);b.mesh.scale.setScalar(1);});
+      placed=TOTAL; applyStatus('done',placed,t);
+    } else {
+      L=5.0;camX=CAM_WIDE.x;camY=CAM_WIDE.y;camZ=CAM_WIDE.z;camLx=CAM_WIDE.lx; CONT.setColor(C_GOOD);
+      boxes.forEach(function(b){b.mesh.position.copy(b.finalT);b.edge.color.setHex(C_GOOD);b.mat.color.setHex(0x1d4a48);}); placed=TOTAL;
+    }
+
+    CONT.setLength(L); placeShadow(L);
+    var f=fade*dim;
+    if(name!=='success')CONT.setOpacity(f); else {CONT.edgeMat.opacity*=fade;CONT.endMat.opacity*=fade;CONT.gridMat.opacity=0.42*fade;}
+    boxes.forEach(function(b){b.mat.opacity=f;b.edge.opacity=0.78*f;});
+    shadow.material.opacity=0.8*fade;
+    if(name!=='solve'&&name!=='grow'){scanGroup.visible=false;bracketMat.opacity=0;bboxMat.opacity=0;}
+    else {bracketMat.opacity*=fade;bboxMat.opacity*=fade;}
+    sweep.material.opacity=sweepOp*0.85*fade;
+    camera.position.set(camX,camY,camZ); camera.lookAt(camLx,0.5,0);
+  }
+
+  var elapsed=0;
+  function loop(){
+    if(!running)return;
+    var dt=Math.min(clock.getDelta(),0.05); elapsed+=dt;
+    var ct=elapsed%CYCLE;
+    px+=(tx-px)*0.06; py+=(ty-py)*0.06;
+    pivot.rotation.y=px+(phaseAt(ct).n==='success'?Math.sin(elapsed*0.5)*0.04:0);
+    pivot.rotation.x=py*0.6;
+    update(ct,elapsed);
+    renderer.render(scene,camera);
+    raf=requestAnimationFrame(loop);
+  }
 })();
 </script>
 <!-- Besucherzaehler: GoatCounter (kostenlos, ohne Cookies, DSGVO-freundlich) -->
