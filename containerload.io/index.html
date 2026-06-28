@@ -182,17 +182,18 @@ details[open] .faq-plus{transform:rotate(45deg)}
       <div data-i18n="hero_trust" class="mt-7 flex items-center gap-5 justify-center lg:justify-start mono text-[12px]" style="color:var(--faint)">
         <span>✓ Ohne Account</span><span>✓ 0 € Setup</span><span>✓ ISO 668</span>
       </div>
+    </div>
+    <!-- Re-Solve 3D-Hero (rechte Spalte): Status-Strip steht ueber der Animation, damit klar wird, dass beides zusammengehoert -->
+    <div>
       <!-- Status-Strip: laeuft synchron zur 3D-Hero-Animation (Texte vom clh-Modul gesetzt, kein data-i18n) -->
-      <div class="clh-status mx-auto lg:mx-0" id="clhStatus" style="border-color:#37d39f;box-shadow:0 0 26px -10px #37d39f">
+      <div class="clh-status mx-auto mb-4" id="clhStatus" style="border-color:#37d39f;box-shadow:0 0 26px -10px #37d39f">
         <div class="clh-ic" id="clhStatusIc" style="background:#37d39f;color:#04101f">✓</div>
         <div>
           <div class="clh-txt" id="clhStatusTxt" style="color:#37d39f">Alles verstaut</div>
           <div class="clh-meta" id="clhStatusMeta">1× 40′ GP · gelöst</div>
         </div>
       </div>
-    </div>
-    <!-- Re-Solve 3D-Hero (rechte Spalte) -->
-    <div class="clh-stage reveal">
+      <div class="clh-stage reveal">
       <div class="clh-pill f1" id="clhPillType"><span class="clh-dot" style="background:#37d39f"></span> 40′ GP</div>
       <div class="clh-pill f2" id="clhPillFit"><span class="clh-dot" style="background:#37d39f"></span> ✓ passt</div>
 
@@ -225,6 +226,7 @@ details[open] .faq-plus{transform:rotate(45deg)}
         <div class="clh-step" data-k="solve"><span class="clh-sd"></span><span class="clh-sl">Lösen</span></div>
         <div class="clh-sep"></div>
         <div class="clh-step on" data-k="done"><span class="clh-sd" style="background:#37d39f;box-shadow:0 0 10px #37d39f"></span><span class="clh-sl">Gelöst</span></div>
+      </div>
       </div>
     </div>
   </div>
