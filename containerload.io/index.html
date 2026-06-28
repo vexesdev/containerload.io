@@ -418,9 +418,10 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){
 
   var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var COARSE  = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-  var SMALL   = window.innerWidth < 760;
-  // Auf Mobil / Touch / reduzierter Bewegung: kein WebGL, SVG-Standbild bleibt stehen.
-  if(REDUCED || COARSE || SMALL) return;
+  // Auf Touch-Geraeten (Handy/Tablet) und bei reduzierter Bewegung: kein WebGL, SVG-Standbild
+  // bleibt stehen. KEIN reiner Breiten-Check mehr - der hat sonst auch schmale Desktop-Fenster
+  // (Zwei-Spalten-Hero unter 760px) faelschlich auf das Standbild gesetzt.
+  if(REDUCED || COARSE) return;
 
   var TOTAL=14, OVERFLOW=3;
 
@@ -483,11 +484,16 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){
   function ensureThree(cb){ if(window.THREE) return cb();
     var s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
     s.async=true; s.onload=cb; s.onerror=function(){}; document.head.appendChild(s); }
+  // WICHTIG: das Canvas steht bis zum Three-Load auf display:none und hat damit keine
+  // Box -> ein IntersectionObserver darauf wuerde NIE isIntersecting=true melden.
+  // Daher die immer sichtbare Stage beobachten (Wrapper .clh-stage). Und: Canvas erst
+  // sichtbar machen, DANN build() (sizeUp misst die echte Canvas-Groesse).
+  var stage=canvas.parentNode;
   var io=new IntersectionObserver(function(es){es.forEach(function(e){
-    if(e.isIntersecting){ if(!started){started=true; ensureThree(function(){ if(!window.THREE)return; build(); poster&&(poster.style.display='none'); canvas.style.display='block'; resume(); }); } else resume(); }
+    if(e.isIntersecting){ if(!started){started=true; ensureThree(function(){ if(!window.THREE)return; canvas.style.display='block'; poster&&(poster.style.display='none'); build(); resume(); }); } else resume(); }
     else pause();
   });},{threshold:0.12});
-  io.observe(canvas);
+  io.observe(stage);
   document.addEventListener('visibilitychange',function(){ if(document.hidden) pause(); else if(started) resume(); });
   function pause(){ running=false; if(raf){cancelAnimationFrame(raf);raf=0;} }
   function resume(){ if(running||!started)return; running=true; clock&&clock.start(); raf=requestAnimationFrame(loop); }
